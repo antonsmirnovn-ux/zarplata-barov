@@ -51,6 +51,10 @@ label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--mute
 .ph .name{font-weight:600;font-size:16px}
 .ph .total{font-family:var(--display);font-size:20px;font-weight:700}
 .parts{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;font-size:12px;color:var(--muted)}
+.lines{display:flex;flex-direction:column;gap:2px}
+.ln{display:grid;grid-template-columns:1fr auto 84px;gap:10px;align-items:baseline;font-size:14px;padding:5px 0;border-top:1px solid var(--line)}
+.ln .v{color:var(--muted);font-size:13px}
+.ln b{text-align:right;color:var(--accent)}
 .zp{display:block;color:var(--accent);font-weight:600}
 .parts span b{display:block;color:var(--fg);font-weight:600;font-size:13px}
 @media (max-width:460px){.parts{grid-template-columns:repeat(3,1fr)}}
@@ -190,7 +194,7 @@ function render(){const list=visible();$('pLabel').textContent=periodLabel();
   const by={};list.forEach(s=>{const p=pay(s);const o=by[s.name]=by[s.name]||{n:0,base:0,draft:0,bottle:0,liq:0,kitchen:0,total:0,v:{draft:0,bottle:0,liq:0,kitchen:0}};o.n++;for(const f in p)o[f]+=p[f];for(const f in o.v)o.v[f]+=s[f];});
   const names=Object.keys(by).sort((a,b)=>by[b].total-by[a].total);
   $('people').innerHTML=names.length?names.map(n=>{const o=by[n];return `<div class="person"><div class="ph"><span class="name">${esc(n)}</span><span class="total num">${rub(o.total)}</span></div>
-    <div class="parts num"><span>Смены · ${o.n}<b>${rub(o.base)}</b></span><span>Розлив · ${rub(o.v.draft)}<b>${rub(o.draft)}</b></span><span>Фасовка, вода · ${o.v.bottle} шт<b>${rub(o.bottle)}</b></span><span>Настойки · ${o.v.liq} шт<b>${rub(o.liq)}</b></span><span>Кухня, снеки · ${rub(o.v.kitchen)}<b>${rub(o.kitchen)}</b></span></div></div>`}).join('')
+    <div class="lines num">${[['Смены',o.n+' шт',o.base],['Розлив',rub(o.v.draft),o.draft],['Фасовка, вода',o.v.bottle+' шт',o.bottle],['Настойки',o.v.liq+' шт',o.liq],['Кухня, снеки',rub(o.v.kitchen),o.kitchen]].map(([l,v,z])=>`<div class="ln"><span>${l}</span><span class="v">${v}</span><b>${rub(z)}</b></div>`).join('')}</div></div>`}).join('')
     :'<div class="empty">В этом периоде закрытых смен нет</div>';
   const g=names.reduce((a,n)=>a+by[n].total,0);
   $('grand').innerHTML=names.length?`<span>Всего · ${list.length} смен</span><b class="num">${rub(g)}</b>`:'';
