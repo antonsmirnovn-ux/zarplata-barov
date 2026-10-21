@@ -4,13 +4,13 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Зарплата">
+<meta name="apple-mobile-web-app-title" content="Моя ЗПшечка">
 <meta name="theme-color" content="#9a4a16">
 <meta name="robots" content="noindex">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style>
-<title>Зарплата барменов</title>
+<title>Моя ЗПшечка</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=Unbounded:wght@500;700&display=swap">
 <style>
@@ -18,6 +18,7 @@
 :root{
   --bg:#f6f3ef; --surface:#ffffff; --fg:#231c16; --muted:#7a6d62; --line:#e6ded5;
   --accent:#9a4a16; --accent-soft:#f6e6d9; --epo:#2f5d62; --epo-soft:#dcebec; --bad:#b3362b;
+  --tile:#e8873a;
   --display:"Unbounded","Golos Text",system-ui,sans-serif;
   --body:"Golos Text",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
@@ -40,14 +41,14 @@ h2{font-family:var(--display);font-size:14px;font-weight:500;margin:0;letter-spa
 .tile{border:0;border-radius:18px;padding:26px 18px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:30px;min-height:150px;font:inherit}
 .tile .t{font-family:var(--display);font-size:26px;font-weight:700}
 .tile .s{font-size:13px;opacity:.8}
-.tile.b13{background:var(--accent-soft);color:var(--accent)}
-.tile.bepo{background:var(--epo-soft);color:var(--epo)}
+.tile.b13,.tile.bepo{background:var(--tile);color:#1a120b}
+.tile .s{opacity:.75}
 .tile:focus-visible,button:focus-visible,input:focus{outline:2px solid var(--fg);outline-offset:2px}
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px}
-input{font:inherit;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:11px 12px;width:100%;min-width:0}
+select,input{font:inherit;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:11px 12px;width:100%;min-width:0}
 label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);min-width:0}
 .btn{font:inherit;font-weight:600;border:0;border-radius:10px;padding:12px 14px;cursor:pointer;background:var(--accent);color:#fff}
-.btn.epo{background:var(--epo);color:var(--bg)}
+.btn.epo{background:var(--accent)}
 .btn.ghost{background:transparent;color:var(--fg);border:1px solid var(--line)}
 .btn.small{padding:6px 10px;font-size:13px;font-weight:500}
 .err{color:var(--bad);font-size:13px}
@@ -80,7 +81,7 @@ th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
 <div class="wrap">
   <section id="home">
     <div style="display:flex;flex-direction:column;gap:20px">
-      <header><h1>Зарплата барменов</h1><div class="sub">Выберите бар и введите пароль</div></header>
+      <header><h1>Моя ЗПшечка</h1><div class="sub">Выберите бар</div></header>
       <div class="tiles">
         <button class="tile b13" data-bar="13"><span class="t">13шка</span><span class="s">Московская 33</span></button>
         <button class="tile bepo" data-bar="epo"><span class="t">ЕпО</span><span class="s">Ещё по одной</span></button>
@@ -113,6 +114,7 @@ th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
           <button data-h="1">1–15</button><button data-h="2">16–31</button><button data-h="0">Месяц</button>
         </div>
       </div>
+      <label>Бармен<select id="who"></select></label>
       <section style="display:flex;flex-direction:column;gap:10px">
         <div class="ph"><h2>К выплате <span id="pLabel" class="num" style="color:var(--muted)"></span></h2>
           <button class="btn small ghost" id="copy">Скопировать</button></div>
@@ -132,13 +134,16 @@ th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
 </div>
 
 <script>
-const VAULT={"iter":210000,"updated":"21.10.2026, 18:44","stamp":"2026-10-21T18:44","bars":{"13":{"wraps":[{"salt":"n9D/mt9aUQT5KHhKcm5aqQ==","iv":"nfnA5jHTwcSYSWJh","ct":"7yelLY7Z4LRz/t6GHPP8E2dITkOuFnPGe5nn9Agw4denHW6G55fn1dFUoGwMQPCsydzyA9STgCY+B2P2mVlJ4Bj9Vn3wRx6CbJOB4z73GNEv9tSpZHbp5ZRSpgbLZ4/ZQTJrZ6E4y30Ma5U3UfDyOz3yB4nMfCjoH0Na18nP3ek0Gd/gxEM/uPbSX5PMOQMq1/sQeT7CosuMPA=="},{"salt":"b5XaCjalYs60ODUgHz0iRw==","iv":"4Gj2W3NK2/sf/eNY","ct":"Q4+s3+PMVfDspQx9IGpSYq2AO8DXHbE5GUehuzjB4f+YmbZOkgjBqcaslBFDONVl3JcgWU/YtiRo71dj1Q4uiORPLe8wixbwUzguQcMgdkROtLFkpPwM55hhMKCcAnnfxly1wOolZreQC2bcX6MAIRzlnmEUjXZBzJP2ol0lisX7Nb2W3JA9GwS6yvFqyDIZLjJUJWemLIqtzg=="},{"salt":"LaLHLEoE0kfQ8l8QpdU6aQ==","iv":"yUTahb+Ygbvc/S0V","ct":"+zvYQmN99TkiTOHd06VhzHZczglM/aZJ1KRWMvL3vc2fEG49Ih4mBBDSUmQ8RhiLZyBcNmHz3dDaq31SH5nw2BZgWMXWyR9owKAcHxe5VanGgmk2k7/C7wxKWX/cpGhyzkRq/4yMT+ZRksLcMPb0fDLmn14B6ODRGtifrvnw1pqQcIgdK27vMzMsowh3sp1T/ThHBeY3GPXAPw=="}],"data":{"epub":"BCP2pP0V18O/4+TYf2BaknqI870SmDorbxdxu6V7FuobCLITt4U/CiAnrc6Ub9F8LzgilVVWYFQeYw4ai1GkgWI=","iv":"TZ3aKiZwXSlZ1Slk","ct":"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"}},"epo":{"wraps":[{"salt":"7b1Z6qPLv1WBYsorFPGiLw==","iv":"xlbyI5BRpdXd1iNb","ct":"DaihMseWbSiBmFcrJI/uDjw/+OSnEVs/Zn4FAV6u/qDXb3UnLyD8tOKYbzfyDMlnzaZpom2fp/K2n00wLGBy61KorVKib/p1aJK5N4nxU9mgj5fHTdFM8hqM+ELjZvzdFyJvkAew63WqJOGKGPQerz/X0OzAtT291Ze/r97SxrBhRUGbMrbtMRnyacKK0DM5rX3B9UrQST5c4Q=="},{"salt":"UWj4gy1d62U//gG/eeShbA==","iv":"b9ZtZMdDr3Enj69V","ct":"8aJaiKgkBJ/9eVWXOVekVXENhUO7k+4he2WJLcHC6ql2GSAnMe0quuUYZQu8/alaP6l6c9VjfS1yCQkIk4T+OuenMtxqVThNiErnqFjw6yWLGrXHYwQCSS/FjVlYl3xN7J9jeCBdMh3LpzmS9fPKtqIpwsbzXUl66h5Ha+2zxEfr6YW+58MORJncPB6g9uzgB+fZMU31RZZS7w=="},{"salt":"z9I/xOoMUbNegB+xCFBKqg==","iv":"x8rzfdljO+bio4By","ct":"ih8AKin85VCnz/SLBTSaPHoBPm5WfNrWM3Gyaw7a5DLkV79YqV0XItcVu7kAZCJMV520OuONQgGM+w668brsHomOGx1lVc62jp51VM1GD3B2XFx9L8n/fjOLTlngiiA7lHUQ9jMvOQpmW7+eW9vUtBZ7XyV3XZqAQ6UihD9knXEDMoWjvgSNAucQzb56kpWiLVlkGcLd1pD8VQ=="}],"data":{"epub":"BCgcSWzoqm5E2bChgWYD01U1ECUhvFMrR/sNCh+WGBRHz1l9JCc65B0mSjIcWnOwJS0VEQDgThSpWou9BXh1jE8=","iv":"oLeJtubdjOcxTRS3","ct":"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"}}}};
-const BAR={'13':{t:'13шка',s:'Московская 33',c:'var(--accent)'},'epo':{t:'ЕпО',s:'Ещё по одной',c:'var(--epo)'}};
+const VAULT={"iter":210000,"updated":"21.10.2026, 18:44","stamp":"2026-10-21T18:44","bars":{"13":{"wraps":[{"salt":"n9D/mt9aUQT5KHhKcm5aqQ==","iv":"nfnA5jHTwcSYSWJh","ct":"7yelLY7Z4LRz/t6GHPP8E2dITkOuFnPGe5nn9Agw4denHW6G55fn1dFUoGwMQPCsydzyA9STgCY+B2P2mVlJ4Bj9Vn3wRx6CbJOB4z73GNEv9tSpZHbp5ZRSpgbLZ4/ZQTJrZ6E4y30Ma5U3UfDyOz3yB4nMfCjoH0Na18nP3ek0Gd/gxEM/uPbSX5PMOQMq1/sQeT7CosuMPA=="},{"salt":"b5XaCjalYs60ODUgHz0iRw==","iv":"4Gj2W3NK2/sf/eNY","ct":"Q4+s3+PMVfDspQx9IGpSYq2AO8DXHbE5GUehuzjB4f+YmbZOkgjBqcaslBFDONVl3JcgWU/YtiRo71dj1Q4uiORPLe8wixbwUzguQcMgdkROtLFkpPwM55hhMKCcAnnfxly1wOolZreQC2bcX6MAIRzlnmEUjXZBzJP2ol0lisX7Nb2W3JA9GwS6yvFqyDIZLjJUJWemLIqtzg=="},{"salt":"LaLHLEoE0kfQ8l8QpdU6aQ==","iv":"yUTahb+Ygbvc/S0V","ct":"+zvYQmN99TkiTOHd06VhzHZczglM/aZJ1KRWMvL3vc2fEG49Ih4mBBDSUmQ8RhiLZyBcNmHz3dDaq31SH5nw2BZgWMXWyR9owKAcHxe5VanGgmk2k7/C7wxKWX/cpGhyzkRq/4yMT+ZRksLcMPb0fDLmn14B6ODRGtifrvnw1pqQcIgdK27vMzMsowh3sp1T/ThHBeY3GPXAPw=="}],"data":{"epub":"BIFbPbmpaOo3dtyUjWp18Dgowyz5jXunu4Yp8TiKw2+Ch+FDbOGQ4ecdUpOpE0QnqJ5Ilx88X0I0MHQxdh8iel4=","iv":"KtQQcFU3bVh9eZZ0","ct":"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"}},"epo":{"wraps":[{"salt":"7b1Z6qPLv1WBYsorFPGiLw==","iv":"xlbyI5BRpdXd1iNb","ct":"DaihMseWbSiBmFcrJI/uDjw/+OSnEVs/Zn4FAV6u/qDXb3UnLyD8tOKYbzfyDMlnzaZpom2fp/K2n00wLGBy61KorVKib/p1aJK5N4nxU9mgj5fHTdFM8hqM+ELjZvzdFyJvkAew63WqJOGKGPQerz/X0OzAtT291Ze/r97SxrBhRUGbMrbtMRnyacKK0DM5rX3B9UrQST5c4Q=="},{"salt":"UWj4gy1d62U//gG/eeShbA==","iv":"b9ZtZMdDr3Enj69V","ct":"8aJaiKgkBJ/9eVWXOVekVXENhUO7k+4he2WJLcHC6ql2GSAnMe0quuUYZQu8/alaP6l6c9VjfS1yCQkIk4T+OuenMtxqVThNiErnqFjw6yWLGrXHYwQCSS/FjVlYl3xN7J9jeCBdMh3LpzmS9fPKtqIpwsbzXUl66h5Ha+2zxEfr6YW+58MORJncPB6g9uzgB+fZMU31RZZS7w=="},{"salt":"z9I/xOoMUbNegB+xCFBKqg==","iv":"x8rzfdljO+bio4By","ct":"ih8AKin85VCnz/SLBTSaPHoBPm5WfNrWM3Gyaw7a5DLkV79YqV0XItcVu7kAZCJMV520OuONQgGM+w668brsHomOGx1lVc62jp51VM1GD3B2XFx9L8n/fjOLTlngiiA7lHUQ9jMvOQpmW7+eW9vUtBZ7XyV3XZqAQ6UihD9knXEDMoWjvgSNAucQzb56kpWiLVlkGcLd1pD8VQ=="}],"data":{"epub":"BHWcoeK2zXKX3CqMXZ4RVJVqvi8tAjj7y1bvpzs+QYuhyUdq1G3v3A3JZA3B9YZburUyAPOy6mfd7hwvvnrPfDU=","iv":"De37PfhTmUP65ldK","ct":"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"}}}};
+const BAR={'13':{t:'13шка',s:'Московская 33',c:'var(--accent)'},'epo':{t:'ЕпО',s:'Ещё по одной',c:'var(--accent)'}};
 const $=id=>document.getElementById(id);
 const rub=n=>Math.round(n).toLocaleString('ru-RU')+' ₽';
 const te=new TextEncoder(),td=new TextDecoder();
 const b64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
 const unlocked={};let cur=null,canAll=false;
+const LS='zp-auth-v1';
+const lsGet=k=>{try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}};
+const lsSet=(k,v)=>{try{v==null?localStorage.removeItem(k):localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
 let half=new Date().getDate()<=15?'1':'2';
 
 function show(id){['home','gate','view'].forEach(x=>$(x).hidden=x!==id);window.scrollTo(0,0);}
@@ -167,26 +172,31 @@ $('gateForm').onsubmit=async e=>{e.preventDefault();const pw=$('pw').value;$('ga
   const data=await tryUnlock(gateBar,pw);
   if(data){unlocked[gateBar]=data;const other=gateBar==='13'?'epo':'13';
     const od=await tryUnlock(other,pw);if(od){unlocked[other]=od;canAll=true;}
+    const saved=lsGet(LS)||{};saved[gateBar]=pw;if(canAll)saved[other]=pw;lsSet(LS,saved);
     $('pw').value='';open(gateBar);}
   else $('gateErr').hidden=false;
   $('gateBtn').disabled=false;$('gateBtn').textContent='Войти';};
-$('logout').onclick=()=>{for(const k in unlocked)delete unlocked[k];canAll=false;cur=null;show('home');};
+$('logout').onclick=()=>{for(const k in unlocked)delete unlocked[k];canAll=false;cur=null;lsSet(LS,null);lsSet('zp-who',null);show('home');};
 $('switchBar').onclick=()=>open(cur==='13'?'epo':'13');
 
-function open(bar){cur=bar;const d=unlocked[bar];
+function open(bar){cur=bar;lsSet('zp-bar',bar);const d=unlocked[bar];
   $('vTitle').textContent=BAR[bar].t;$('vTitle').style.color=BAR[bar].c;
   $('vSub').textContent='Данные GainUp на '+d.updated;
   $('half').style.setProperty('--c',BAR[bar].c);
   $('switchBar').hidden=!(canAll&&unlocked[bar==='13'?'epo':'13']);
   if(!$('month').value){const months=[...new Set(d.shifts.map(s=>s.date.slice(0,7)))].sort();$('month').value=months[months.length-1]||new Date().toISOString().slice(0,7);}
   const r=d.rates;$('rateNote').textContent=`Ставка ${r.base} ₽ за смену · ${r.draft}% розлив · ${r.bottle} ₽ за фасовку и воду · ${r.liq} ₽ за пивн. настойки · ${r.kitchen}% кухня и снеки. Суммы — после скидок и оплаты баллами UDS. Учтены закрытые смены с продажами.`;
+  const names=[...new Set(d.shifts.map(s=>s.name))].sort((a,b)=>a.localeCompare(b,'ru'));
+  if(who[cur]&&!names.includes(who[cur]))who[cur]='';
+  $('who').innerHTML='<option value="">Все бармены</option>'+names.map(n=>`<option${who[cur]===n?' selected':''}>${esc(n)}</option>`).join('');
   show('view');render();}
 
 function pay(s){const r=unlocked[cur].rates;const p={base:r.base,draft:s.draft*r.draft/100,bottle:s.bottle*r.bottle,liq:s.liq*r.liq,kitchen:s.kitchen*r.kitchen/100};p.total=p.base+p.draft+p.bottle+p.liq+p.kitchen;return p;}
 function lastDay(m){const[y,mm]=m.split('-').map(Number);return new Date(y,mm,0).getDate();}
 function periodLabel(){const m=$('month').value;const[y,mm]=m.split('-');const L=lastDay(m);
   return half==='1'?`01–15.${mm}.${y}`:half==='2'?`16–${L}.${mm}.${y}`:`01–${L}.${mm}.${y}`;}
-function visible(){const m=$('month').value;return unlocked[cur].shifts.filter(s=>s.date.startsWith(m)&&(half==='0'||(half==='1'?+s.date.slice(8)<=15:+s.date.slice(8)>=16))).sort((a,b)=>a.date.localeCompare(b.date));}
+let who=(lsGet('zp-who')||{});
+function visible(){const m=$('month').value;const w=who[cur]||'';return unlocked[cur].shifts.filter(s=>(!w||s.name===w)&&s.date.startsWith(m)&&(half==='0'||(half==='1'?+s.date.slice(8)<=15:+s.date.slice(8)>=16))).sort((a,b)=>a.date.localeCompare(b.date));}
 function esc(t){return String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 
 function render(){const list=visible();$('pLabel').textContent=periodLabel();
@@ -200,12 +210,18 @@ function render(){const list=visible();$('pLabel').textContent=periodLabel();
   $('grand').innerHTML=names.length?`<span>Всего · ${list.length} смен</span><b class="num">${rub(g)}</b>`:'';
   $('rows').innerHTML=list.length?list.map(s=>`<tr><td class="num">${s.date.slice(8)}.${s.date.slice(5,7)}</td><td>${esc(s.name)}</td><td class="num">${rub(s.draft)}</td><td class="num">${s.bottle}</td><td class="num">${s.liq}</td><td class="num">${rub(s.kitchen)}</td><td class="num"><b>${rub(pay(s).total)}</b></td></tr>`).join(''):'<tr><td colspan="7" class="empty">Нет смен</td></tr>';}
 $('month').onchange=render;
+$('who').onchange=()=>{who[cur]=$('who').value;lsSet('zp-who',who);render();};
 document.querySelectorAll('#half button').forEach(b=>b.onclick=()=>{half=b.dataset.h;render();});
 $('copy').onclick=()=>{const by={};visible().forEach(s=>{by[s.name]=by[s.name]||{n:0,t:0};by[s.name].n++;by[s.name].t+=pay(s).total;});
   const txt=`Зарплата ${BAR[cur].t}, ${periodLabel()}\n`+Object.entries(by).map(([n,o])=>`${n}: ${o.n} смен — ${rub(o.t)}`).join('\n');
   navigator.clipboard.writeText(txt).then(()=>toast('Скопировано'),()=>toast('Не удалось скопировать'));};
 function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),1800);}
 $('updNote').textContent=VAULT?'Данные GainUp на '+VAULT.updated:'';
+(async()=>{const saved=lsGet(LS);if(!saved||!VAULT)return;let first=null;
+  for(const b of ['13','epo']){if(!saved[b])continue;const d=await tryUnlock(b,saved[b]);if(d){unlocked[b]=d;first=first||b;}else{delete saved[b];}}
+  lsSet(LS,Object.keys(saved).length?saved:null);
+  canAll=!!(unlocked['13']&&unlocked['epo']);
+  const last=lsGet('zp-bar');if(last&&unlocked[last])open(last);else if(first&&!canAll)open(first);})();
 </script>
 
 <script>if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');</script>

@@ -20,7 +20,7 @@ const head=`<!doctype html>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Зарплата">
+<meta name="apple-mobile-web-app-title" content="Моя ЗПшечка">
 <meta name="theme-color" content="#9a4a16">
 <meta name="robots" content="noindex">
 <link rel="manifest" href="manifest.json">
