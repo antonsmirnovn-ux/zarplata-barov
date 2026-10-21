@@ -51,6 +51,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--mute
 .ph .name{font-weight:600;font-size:16px}
 .ph .total{font-family:var(--display);font-size:20px;font-weight:700}
 .parts{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;font-size:12px;color:var(--muted)}
+.zp{display:block;color:var(--accent);font-weight:600}
 .parts span b{display:block;color:var(--fg);font-weight:600;font-size:13px}
 @media (max-width:460px){.parts{grid-template-columns:repeat(3,1fr)}}
 .total-line{display:flex;justify-content:space-between;align-items:baseline;padding:4px 2px;font-weight:600}
@@ -111,11 +112,10 @@ th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
       <section style="display:flex;flex-direction:column;gap:10px">
         <h2>Смены</h2>
         <div class="panel log"><table>
-          <thead><tr><th>Дата</th><th>Бармен</th><th>Розлив</th><th>Фас.+вода</th><th>Наст.</th><th>Кухня+снеки</th><th>Итого</th></tr></thead>
+          <thead><tr><th>Дата</th><th>Бармен</th><th>Розлив</th><th>Фас.+вода</th><th>Наст.</th><th>Кухня+снеки</th><th>ЗП</th></tr></thead>
           <tbody id="rows"></tbody>
         </table></div>
       </section>
-      <div class="note" id="rateNote"></div>
     </div>
   </section>
 </div>
@@ -172,7 +172,6 @@ function open(bar){cur=bar;lsSet('zp-bar',bar);const d=unlocked[bar];
   $('half').style.setProperty('--c',BAR[bar].c);
   $('switchBar').hidden=!(canAll&&unlocked[bar==='13'?'epo':'13']);
   if(!$('month').value){const months=[...new Set(d.shifts.map(s=>s.date.slice(0,7)))].sort();$('month').value=months[months.length-1]||new Date().toISOString().slice(0,7);}
-  const r=d.rates;$('rateNote').textContent=`Ставка ${r.base} ₽ за смену · ${r.draft}% розлив · ${r.bottle} ₽ за фасовку и воду · ${r.liq} ₽ за пивн. настойки · ${r.kitchen}% кухня и снеки. Суммы — после скидок и оплаты баллами UDS. Учтены закрытые смены с продажами.`;
   const names=[...new Set(d.shifts.map(s=>s.name))].sort((a,b)=>a.localeCompare(b,'ru'));
   if(who[cur]&&!names.includes(who[cur]))who[cur]='';
   $('who').innerHTML='<option value="">Все бармены</option>'+names.map(n=>`<option${who[cur]===n?' selected':''}>${esc(n)}</option>`).join('');
@@ -188,14 +187,14 @@ function esc(t){return String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','
 
 function render(){const list=visible();$('pLabel').textContent=periodLabel();
   document.querySelectorAll('#half button').forEach(x=>x.setAttribute('aria-pressed',x.dataset.h===half));
-  const by={};list.forEach(s=>{const p=pay(s);const o=by[s.name]=by[s.name]||{n:0,base:0,draft:0,bottle:0,liq:0,kitchen:0,total:0};o.n++;for(const f in p)o[f]+=p[f];});
+  const by={};list.forEach(s=>{const p=pay(s);const o=by[s.name]=by[s.name]||{n:0,base:0,draft:0,bottle:0,liq:0,kitchen:0,total:0,v:{draft:0,bottle:0,liq:0,kitchen:0}};o.n++;for(const f in p)o[f]+=p[f];for(const f in o.v)o.v[f]+=s[f];});
   const names=Object.keys(by).sort((a,b)=>by[b].total-by[a].total);
   $('people').innerHTML=names.length?names.map(n=>{const o=by[n];return `<div class="person"><div class="ph"><span class="name">${esc(n)}</span><span class="total num">${rub(o.total)}</span></div>
-    <div class="parts num"><span>Смены<b>${o.n} · ${rub(o.base)}</b></span><span>Розлив<b>${rub(o.draft)}</b></span><span>Фасовка, вода<b>${rub(o.bottle)}</b></span><span>Настойки<b>${rub(o.liq)}</b></span><span>Кухня, снеки<b>${rub(o.kitchen)}</b></span></div></div>`}).join('')
+    <div class="parts num"><span>Смены · ${o.n}<b>${rub(o.base)}</b></span><span>Розлив · ${rub(o.v.draft)}<b>${rub(o.draft)}</b></span><span>Фасовка, вода · ${o.v.bottle} шт<b>${rub(o.bottle)}</b></span><span>Настойки · ${o.v.liq} шт<b>${rub(o.liq)}</b></span><span>Кухня, снеки · ${rub(o.v.kitchen)}<b>${rub(o.kitchen)}</b></span></div></div>`}).join('')
     :'<div class="empty">В этом периоде закрытых смен нет</div>';
   const g=names.reduce((a,n)=>a+by[n].total,0);
   $('grand').innerHTML=names.length?`<span>Всего · ${list.length} смен</span><b class="num">${rub(g)}</b>`:'';
-  $('rows').innerHTML=list.length?list.map(s=>`<tr><td class="num">${s.date.slice(8)}.${s.date.slice(5,7)}</td><td>${esc(s.name)}</td><td class="num">${rub(s.draft)}</td><td class="num">${s.bottle}</td><td class="num">${s.liq}</td><td class="num">${rub(s.kitchen)}</td><td class="num"><b>${rub(pay(s).total)}</b></td></tr>`).join(''):'<tr><td colspan="7" class="empty">Нет смен</td></tr>';}
+  $('rows').innerHTML=list.length?list.map(s=>{const p=pay(s);const c=(v,z)=>`<td class="num">${v}<span class="zp">${rub(z)}</span></td>`;return `<tr><td class="num">${s.date.slice(8)}.${s.date.slice(5,7)}</td><td>${esc(s.name)}</td>${c(rub(s.draft),p.draft)}${c(s.bottle+' шт',p.bottle)}${c(s.liq+' шт',p.liq)}${c(rub(s.kitchen),p.kitchen)}<td class="num"><b>${rub(p.total)}</b></td></tr>`}).join(''):'<tr><td colspan="7" class="empty">Нет смен</td></tr>';}
 $('month').onchange=render;
 $('who').onchange=()=>{who[cur]=$('who').value;lsSet('zp-who',who);render();};
 document.querySelectorAll('#half button').forEach(b=>b.onclick=()=>{half=b.dataset.h;render();});
