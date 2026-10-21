@@ -21,10 +21,10 @@ const head=`<!doctype html>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Моя ЗПшечка">
-<meta name="theme-color" content="#9a4a16">
+<meta name="theme-color" content="#e8873a">
 <meta name="robots" content="noindex">
 <link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon-v2.png">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style>
 `;
 const i=h.indexOf('<div class="wrap">');
