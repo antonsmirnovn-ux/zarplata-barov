@@ -24,7 +24,7 @@ const head=`<!doctype html>
 <meta name="theme-color" content="#e8873a">
 <meta name="robots" content="noindex">
 <link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="apple-touch-icon-v3.png">
+<link rel="apple-touch-icon" href="apple-touch-icon-v4.png">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style>
 `;
 const i=h.indexOf('<div class="wrap">');
