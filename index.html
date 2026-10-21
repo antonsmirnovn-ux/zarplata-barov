@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="ru"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Зарплата">
+<meta name="theme-color" content="#9a4a16">
+<meta name="robots" content="noindex">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style>
+<title>Зарплата барменов</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=Unbounded:wght@500;700&display=swap">
+<style>
+/* Layout: phone-first single column — home with two bar tiles, password gate, then bar payroll view */
+:root{
+  --bg:#f6f3ef; --surface:#ffffff; --fg:#231c16; --muted:#7a6d62; --line:#e6ded5;
+  --accent:#9a4a16; --accent-soft:#f6e6d9; --epo:#2f5d62; --epo-soft:#dcebec; --bad:#b3362b;
+  --display:"Unbounded","Golos Text",system-ui,sans-serif;
+  --body:"Golos Text",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#17130f; --surface:#211b16; --fg:#f1e9e1; --muted:#a89889; --line:#3a2f27;
+  --accent:#e08a4c; --accent-soft:#3a2618; --epo:#7cc1c6; --epo-soft:#1d3335; --bad:#ef7b6f; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#17130f; --surface:#211b16; --fg:#f1e9e1; --muted:#a89889; --line:#3a2f27;
+  --accent:#e08a4c; --accent-soft:#3a2618; --epo:#7cc1c6; --epo-soft:#1d3335; --bad:#ef7b6f; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+h1{font-family:var(--display);font-size:22px;font-weight:700;margin:0;text-wrap:balance}
+h2{font-family:var(--display);font-size:14px;font-weight:500;margin:0;letter-spacing:.02em}
+.sub{color:var(--muted);font-size:13px;margin-top:4px}
+.num{font-variant-numeric:tabular-nums}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:420px){.tiles{grid-template-columns:1fr}}
+.tile{border:0;border-radius:18px;padding:26px 18px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:30px;min-height:150px;font:inherit}
+.tile .t{font-family:var(--display);font-size:26px;font-weight:700}
+.tile .s{font-size:13px;opacity:.8}
+.tile.b13{background:var(--accent-soft);color:var(--accent)}
+.tile.bepo{background:var(--epo-soft);color:var(--epo)}
+.tile:focus-visible,button:focus-visible,input:focus{outline:2px solid var(--fg);outline-offset:2px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px}
+input{font:inherit;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:11px 12px;width:100%;min-width:0}
+label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);min-width:0}
+.btn{font:inherit;font-weight:600;border:0;border-radius:10px;padding:12px 14px;cursor:pointer;background:var(--accent);color:#fff}
+.btn.epo{background:var(--epo);color:var(--bg)}
+.btn.ghost{background:transparent;color:var(--fg);border:1px solid var(--line)}
+.btn.small{padding:6px 10px;font-size:13px;font-weight:500}
+.err{color:var(--bad);font-size:13px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end}
+.seg{display:flex;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:3px}
+.seg button{border:0;background:none;color:var(--muted);font:inherit;font-weight:500;padding:7px 12px;border-radius:7px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--c,var(--accent));color:#fff}
+.people{display:flex;flex-direction:column;gap:10px}
+.person{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.ph{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.ph .name{font-weight:600;font-size:16px}
+.ph .total{font-family:var(--display);font-size:20px;font-weight:700}
+.parts{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;font-size:12px;color:var(--muted)}
+.parts span b{display:block;color:var(--fg);font-weight:600;font-size:13px}
+@media (max-width:460px){.parts{grid-template-columns:repeat(3,1fr)}}
+.total-line{display:flex;justify-content:space-between;align-items:baseline;padding:4px 2px;font-weight:600}
+.total-line b{font-family:var(--display);font-size:18px}
+.log{overflow-x:auto;padding:8px 10px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:right;padding:8px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
+.note{font-size:13px;color:var(--muted)}
+.empty{color:var(--muted);text-align:center;padding:18px;font-size:14px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:9px 14px;border-radius:9px;font-size:13px}
+</style>
+
+</head><body>
+<div class="wrap">
+  <section id="home">
+    <div style="display:flex;flex-direction:column;gap:20px">
+      <header><h1>Зарплата барменов</h1><div class="sub">Выберите бар и введите пароль</div></header>
+      <div class="tiles">
+        <button class="tile b13" data-bar="13"><span class="t">13шка</span><span class="s">Московская 33</span></button>
+        <button class="tile bepo" data-bar="epo"><span class="t">ЕпО</span><span class="s">Ещё по одной</span></button>
+      </div>
+      <div class="note" id="updNote"></div>
+    </div>
+  </section>
+
+  <section id="gate" hidden>
+    <form class="panel" id="gateForm" autocomplete="off">
+      <div class="top"><h2 id="gateTitle">13шка</h2><button type="button" class="btn small ghost" id="gateBack">Назад</button></div>
+      <label>Пароль<input id="pw" type="password" autocomplete="current-password" required></label>
+      <div class="err" id="gateErr" hidden>Неверный пароль для этого бара</div>
+      <button class="btn" id="gateBtn" type="submit">Войти</button>
+    </form>
+  </section>
+
+  <section id="view" hidden>
+    <div style="display:flex;flex-direction:column;gap:18px">
+      <div class="top">
+        <div><h1 id="vTitle">13шка</h1><div class="sub" id="vSub"></div></div>
+        <div class="row" style="gap:6px">
+          <button class="btn small ghost" id="switchBar" hidden>Другой бар</button>
+          <button class="btn small ghost" id="logout">Выйти</button>
+        </div>
+      </div>
+      <div class="row">
+        <label style="flex:1;min-width:130px">Месяц<input type="month" id="month"></label>
+        <div class="seg" role="group" aria-label="Выплата" id="half">
+          <button data-h="1">1–15</button><button data-h="2">16–31</button><button data-h="0">Месяц</button>
+        </div>
+      </div>
+      <section style="display:flex;flex-direction:column;gap:10px">
+        <div class="ph"><h2>К выплате <span id="pLabel" class="num" style="color:var(--muted)"></span></h2>
+          <button class="btn small ghost" id="copy">Скопировать</button></div>
+        <div class="people" id="people"></div>
+        <div class="total-line" id="grand"></div>
+      </section>
+      <section style="display:flex;flex-direction:column;gap:10px">
+        <h2>Смены</h2>
+        <div class="panel log"><table>
+          <thead><tr><th>Дата</th><th>Бармен</th><th>Розлив</th><th>Фас.+вода</th><th>Наст.</th><th>Кухня+снеки</th><th>Итого</th></tr></thead>
+          <tbody id="rows"></tbody>
+        </table></div>
+      </section>
+      <div class="note" id="rateNote"></div>
+    </div>
+  </section>
+</div>
+
+<script>
+const VAULT={"iter":210000,"updated":"21.10.2026, 18:25","bars":{"13":{"wraps":[{"salt":"n9D/mt9aUQT5KHhKcm5aqQ==","iv":"nfnA5jHTwcSYSWJh","ct":"7yelLY7Z4LRz/t6GHPP8E2dITkOuFnPGe5nn9Agw4denHW6G55fn1dFUoGwMQPCsydzyA9STgCY+B2P2mVlJ4Bj9Vn3wRx6CbJOB4z73GNEv9tSpZHbp5ZRSpgbLZ4/ZQTJrZ6E4y30Ma5U3UfDyOz3yB4nMfCjoH0Na18nP3ek0Gd/gxEM/uPbSX5PMOQMq1/sQeT7CosuMPA=="},{"salt":"b5XaCjalYs60ODUgHz0iRw==","iv":"4Gj2W3NK2/sf/eNY","ct":"Q4+s3+PMVfDspQx9IGpSYq2AO8DXHbE5GUehuzjB4f+YmbZOkgjBqcaslBFDONVl3JcgWU/YtiRo71dj1Q4uiORPLe8wixbwUzguQcMgdkROtLFkpPwM55hhMKCcAnnfxly1wOolZreQC2bcX6MAIRzlnmEUjXZBzJP2ol0lisX7Nb2W3JA9GwS6yvFqyDIZLjJUJWemLIqtzg=="},{"salt":"LaLHLEoE0kfQ8l8QpdU6aQ==","iv":"yUTahb+Ygbvc/S0V","ct":"+zvYQmN99TkiTOHd06VhzHZczglM/aZJ1KRWMvL3vc2fEG49Ih4mBBDSUmQ8RhiLZyBcNmHz3dDaq31SH5nw2BZgWMXWyR9owKAcHxe5VanGgmk2k7/C7wxKWX/cpGhyzkRq/4yMT+ZRksLcMPb0fDLmn14B6ODRGtifrvnw1pqQcIgdK27vMzMsowh3sp1T/ThHBeY3GPXAPw=="}],"data":{"epub":"BBgppCxpq1N6VIxpuQVIhdMTa4HKsRWltJCEffyA+KbrFjan1pGlTMIo/+r2y85G1w443OojTI3s0igfo+1fL74=","iv":"2U27bUY61izh9SNR","ct":"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"}},"epo":{"wraps":[{"salt":"7b1Z6qPLv1WBYsorFPGiLw==","iv":"xlbyI5BRpdXd1iNb","ct":"DaihMseWbSiBmFcrJI/uDjw/+OSnEVs/Zn4FAV6u/qDXb3UnLyD8tOKYbzfyDMlnzaZpom2fp/K2n00wLGBy61KorVKib/p1aJK5N4nxU9mgj5fHTdFM8hqM+ELjZvzdFyJvkAew63WqJOGKGPQerz/X0OzAtT291Ze/r97SxrBhRUGbMrbtMRnyacKK0DM5rX3B9UrQST5c4Q=="},{"salt":"UWj4gy1d62U//gG/eeShbA==","iv":"b9ZtZMdDr3Enj69V","ct":"8aJaiKgkBJ/9eVWXOVekVXENhUO7k+4he2WJLcHC6ql2GSAnMe0quuUYZQu8/alaP6l6c9VjfS1yCQkIk4T+OuenMtxqVThNiErnqFjw6yWLGrXHYwQCSS/FjVlYl3xN7J9jeCBdMh3LpzmS9fPKtqIpwsbzXUl66h5Ha+2zxEfr6YW+58MORJncPB6g9uzgB+fZMU31RZZS7w=="},{"salt":"z9I/xOoMUbNegB+xCFBKqg==","iv":"x8rzfdljO+bio4By","ct":"ih8AKin85VCnz/SLBTSaPHoBPm5WfNrWM3Gyaw7a5DLkV79YqV0XItcVu7kAZCJMV520OuONQgGM+w668brsHomOGx1lVc62jp51VM1GD3B2XFx9L8n/fjOLTlngiiA7lHUQ9jMvOQpmW7+eW9vUtBZ7XyV3XZqAQ6UihD9knXEDMoWjvgSNAucQzb56kpWiLVlkGcLd1pD8VQ=="}],"data":{"epub":"BD3KDqvNeTpXw+pKnKmZ9cIsTLj80psr1JYX+FaS5oz8SxmqjkmyXCdMBAXFYwfq14NzeqByrLb4FGOa2+D8c+0=","iv":"ZGbLY1tb5DPH4clM","ct":"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"}}}};
+const BAR={'13':{t:'13шка',s:'Московская 33',c:'var(--accent)'},'epo':{t:'ЕпО',s:'Ещё по одной',c:'var(--epo)'}};
+const $=id=>document.getElementById(id);
+const rub=n=>Math.round(n).toLocaleString('ru-RU')+' ₽';
+const te=new TextEncoder(),td=new TextDecoder();
+const b64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+const unlocked={};let cur=null,canAll=false;
+let half=new Date().getDate()<=15?'1':'2';
+
+function show(id){['home','gate','view'].forEach(x=>$(x).hidden=x!==id);window.scrollTo(0,0);}
+async function pwKey(pw,salt){const base=await crypto.subtle.importKey('raw',te.encode(pw.normalize('NFC').trim().toLowerCase().replace(/ё/g,'е')),'PBKDF2',false,['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2',salt:b64(salt),iterations:VAULT.iter,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['decrypt']);}
+async function tryUnlock(bar,pw){
+  for(const w of VAULT.bars[bar].wraps){try{
+    const k=await pwKey(pw,w.salt);
+    const pk=await crypto.subtle.decrypt({name:'AES-GCM',iv:b64(w.iv)},k,b64(w.ct));
+    const priv=await crypto.subtle.importKey('pkcs8',pk,{name:'ECDH',namedCurve:'P-256'},false,['deriveKey']);
+    const d=VAULT.bars[bar].data;
+    const epub=await crypto.subtle.importKey('raw',b64(d.epub),{name:'ECDH',namedCurve:'P-256'},false,[]);
+    const ak=await crypto.subtle.deriveKey({name:'ECDH',public:epub},priv,{name:'AES-GCM',length:256},false,['decrypt']);
+    const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:b64(d.iv)},ak,b64(d.ct));
+    return JSON.parse(td.decode(pt));
+  }catch(e){}}
+  return null;}
+
+let gateBar=null;
+document.querySelectorAll('.tile').forEach(t=>t.onclick=()=>{
+  const b=t.dataset.bar;if(unlocked[b]){open(b);return;}
+  gateBar=b;$('gateTitle').textContent=BAR[b].t;$('gateBtn').className='btn'+(b==='epo'?' epo':'');
+  $('gateErr').hidden=true;$('pw').value='';show('gate');setTimeout(()=>$('pw').focus(),50);});
+$('gateBack').onclick=()=>show('home');
+$('gateForm').onsubmit=async e=>{e.preventDefault();const pw=$('pw').value;$('gateBtn').disabled=true;$('gateBtn').textContent='Проверяю…';
+  const data=await tryUnlock(gateBar,pw);
+  if(data){unlocked[gateBar]=data;const other=gateBar==='13'?'epo':'13';
+    const od=await tryUnlock(other,pw);if(od){unlocked[other]=od;canAll=true;}
+    $('pw').value='';open(gateBar);}
+  else $('gateErr').hidden=false;
+  $('gateBtn').disabled=false;$('gateBtn').textContent='Войти';};
+$('logout').onclick=()=>{for(const k in unlocked)delete unlocked[k];canAll=false;cur=null;show('home');};
+$('switchBar').onclick=()=>open(cur==='13'?'epo':'13');
+
+function open(bar){cur=bar;const d=unlocked[bar];
+  $('vTitle').textContent=BAR[bar].t;$('vTitle').style.color=BAR[bar].c;
+  $('vSub').textContent='Данные GainUp на '+d.updated;
+  $('half').style.setProperty('--c',BAR[bar].c);
+  $('switchBar').hidden=!(canAll&&unlocked[bar==='13'?'epo':'13']);
+  if(!$('month').value){const months=[...new Set(d.shifts.map(s=>s.date.slice(0,7)))].sort();$('month').value=months[months.length-1]||new Date().toISOString().slice(0,7);}
+  const r=d.rates;$('rateNote').textContent=`Ставка ${r.base} ₽ за смену · ${r.draft}% розлив · ${r.bottle} ₽ за фасовку и воду · ${r.liq} ₽ за пивн. настойки · ${r.kitchen}% кухня и снеки. Суммы — после скидок и оплаты баллами UDS. Учтены закрытые смены с продажами.`;
+  show('view');render();}
+
+function pay(s){const r=unlocked[cur].rates;const p={base:r.base,draft:s.draft*r.draft/100,bottle:s.bottle*r.bottle,liq:s.liq*r.liq,kitchen:s.kitchen*r.kitchen/100};p.total=p.base+p.draft+p.bottle+p.liq+p.kitchen;return p;}
+function lastDay(m){const[y,mm]=m.split('-').map(Number);return new Date(y,mm,0).getDate();}
+function periodLabel(){const m=$('month').value;const[y,mm]=m.split('-');const L=lastDay(m);
+  return half==='1'?`01–15.${mm}.${y}`:half==='2'?`16–${L}.${mm}.${y}`:`01–${L}.${mm}.${y}`;}
+function visible(){const m=$('month').value;return unlocked[cur].shifts.filter(s=>s.date.startsWith(m)&&(half==='0'||(half==='1'?+s.date.slice(8)<=15:+s.date.slice(8)>=16))).sort((a,b)=>a.date.localeCompare(b.date));}
+function esc(t){return String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+function render(){const list=visible();$('pLabel').textContent=periodLabel();
+  document.querySelectorAll('#half button').forEach(x=>x.setAttribute('aria-pressed',x.dataset.h===half));
+  const by={};list.forEach(s=>{const p=pay(s);const o=by[s.name]=by[s.name]||{n:0,base:0,draft:0,bottle:0,liq:0,kitchen:0,total:0};o.n++;for(const f in p)o[f]+=p[f];});
+  const names=Object.keys(by).sort((a,b)=>by[b].total-by[a].total);
+  $('people').innerHTML=names.length?names.map(n=>{const o=by[n];return `<div class="person"><div class="ph"><span class="name">${esc(n)}</span><span class="total num">${rub(o.total)}</span></div>
+    <div class="parts num"><span>Смены<b>${o.n} · ${rub(o.base)}</b></span><span>Розлив<b>${rub(o.draft)}</b></span><span>Фасовка, вода<b>${rub(o.bottle)}</b></span><span>Настойки<b>${rub(o.liq)}</b></span><span>Кухня, снеки<b>${rub(o.kitchen)}</b></span></div></div>`}).join('')
+    :'<div class="empty">В этом периоде закрытых смен нет</div>';
+  const g=names.reduce((a,n)=>a+by[n].total,0);
+  $('grand').innerHTML=names.length?`<span>Всего · ${list.length} смен</span><b class="num">${rub(g)}</b>`:'';
+  $('rows').innerHTML=list.length?list.map(s=>`<tr><td class="num">${s.date.slice(8)}.${s.date.slice(5,7)}</td><td>${esc(s.name)}</td><td class="num">${rub(s.draft)}</td><td class="num">${s.bottle}</td><td class="num">${s.liq}</td><td class="num">${rub(s.kitchen)}</td><td class="num"><b>${rub(pay(s).total)}</b></td></tr>`).join(''):'<tr><td colspan="7" class="empty">Нет смен</td></tr>';}
+$('month').onchange=render;
+document.querySelectorAll('#half button').forEach(b=>b.onclick=()=>{half=b.dataset.h;render();});
+$('copy').onclick=()=>{const by={};visible().forEach(s=>{by[s.name]=by[s.name]||{n:0,t:0};by[s.name].n++;by[s.name].t+=pay(s).total;});
+  const txt=`Зарплата ${BAR[cur].t}, ${periodLabel()}\n`+Object.entries(by).map(([n,o])=>`${n}: ${o.n} смен — ${rub(o.t)}`).join('\n');
+  navigator.clipboard.writeText(txt).then(()=>toast('Скопировано'),()=>toast('Не удалось скопировать'));};
+function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),1800);}
+$('updNote').textContent=VAULT?'Данные GainUp на '+VAULT.updated:'';
+</script>
+
+<script>if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');</script>
+</body></html>
