@@ -1,0 +1,196 @@
+<title>Зарплата барменов</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=Unbounded:wght@500;700&display=swap">
+<style>
+/* Layout: phone-first single column — home with two bar tiles, password gate, then bar payroll view */
+:root{
+  --bg:#f6f3ef; --surface:#ffffff; --fg:#231c16; --muted:#7a6d62; --line:#e6ded5;
+  --accent:#9a4a16; --accent-soft:#f6e6d9; --epo:#2f5d62; --epo-soft:#dcebec; --bad:#b3362b;
+  --display:"Unbounded","Golos Text",system-ui,sans-serif;
+  --body:"Golos Text",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#17130f; --surface:#211b16; --fg:#f1e9e1; --muted:#a89889; --line:#3a2f27;
+  --accent:#e08a4c; --accent-soft:#3a2618; --epo:#7cc1c6; --epo-soft:#1d3335; --bad:#ef7b6f; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#17130f; --surface:#211b16; --fg:#f1e9e1; --muted:#a89889; --line:#3a2f27;
+  --accent:#e08a4c; --accent-soft:#3a2618; --epo:#7cc1c6; --epo-soft:#1d3335; --bad:#ef7b6f; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+h1{font-family:var(--display);font-size:22px;font-weight:700;margin:0;text-wrap:balance}
+h2{font-family:var(--display);font-size:14px;font-weight:500;margin:0;letter-spacing:.02em}
+.sub{color:var(--muted);font-size:13px;margin-top:4px}
+.num{font-variant-numeric:tabular-nums}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:420px){.tiles{grid-template-columns:1fr}}
+.tile{border:0;border-radius:18px;padding:26px 18px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:30px;min-height:150px;font:inherit}
+.tile .t{font-family:var(--display);font-size:26px;font-weight:700}
+.tile .s{font-size:13px;opacity:.8}
+.tile.b13{background:var(--accent-soft);color:var(--accent)}
+.tile.bepo{background:var(--epo-soft);color:var(--epo)}
+.tile:focus-visible,button:focus-visible,input:focus{outline:2px solid var(--fg);outline-offset:2px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px}
+input{font:inherit;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:11px 12px;width:100%;min-width:0}
+label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);min-width:0}
+.btn{font:inherit;font-weight:600;border:0;border-radius:10px;padding:12px 14px;cursor:pointer;background:var(--accent);color:#fff}
+.btn.epo{background:var(--epo);color:var(--bg)}
+.btn.ghost{background:transparent;color:var(--fg);border:1px solid var(--line)}
+.btn.small{padding:6px 10px;font-size:13px;font-weight:500}
+.err{color:var(--bad);font-size:13px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end}
+.seg{display:flex;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:3px}
+.seg button{border:0;background:none;color:var(--muted);font:inherit;font-weight:500;padding:7px 12px;border-radius:7px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--c,var(--accent));color:#fff}
+.people{display:flex;flex-direction:column;gap:10px}
+.person{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.ph{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.ph .name{font-weight:600;font-size:16px}
+.ph .total{font-family:var(--display);font-size:20px;font-weight:700}
+.parts{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;font-size:12px;color:var(--muted)}
+.parts span b{display:block;color:var(--fg);font-weight:600;font-size:13px}
+@media (max-width:460px){.parts{grid-template-columns:repeat(3,1fr)}}
+.total-line{display:flex;justify-content:space-between;align-items:baseline;padding:4px 2px;font-weight:600}
+.total-line b{font-family:var(--display);font-size:18px}
+.log{overflow-x:auto;padding:8px 10px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:right;padding:8px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
+.note{font-size:13px;color:var(--muted)}
+.empty{color:var(--muted);text-align:center;padding:18px;font-size:14px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:9px 14px;border-radius:9px;font-size:13px}
+</style>
+
+<div class="wrap">
+  <section id="home">
+    <div style="display:flex;flex-direction:column;gap:20px">
+      <header><h1>Зарплата барменов</h1><div class="sub">Выберите бар и введите пароль</div></header>
+      <div class="tiles">
+        <button class="tile b13" data-bar="13"><span class="t">13шка</span><span class="s">Московская 33</span></button>
+        <button class="tile bepo" data-bar="epo"><span class="t">ЕпО</span><span class="s">Ещё по одной</span></button>
+      </div>
+      <div class="note" id="updNote"></div>
+    </div>
+  </section>
+
+  <section id="gate" hidden>
+    <form class="panel" id="gateForm" autocomplete="off">
+      <div class="top"><h2 id="gateTitle">13шка</h2><button type="button" class="btn small ghost" id="gateBack">Назад</button></div>
+      <label>Пароль<input id="pw" type="password" autocomplete="current-password" required></label>
+      <div class="err" id="gateErr" hidden>Неверный пароль для этого бара</div>
+      <button class="btn" id="gateBtn" type="submit">Войти</button>
+    </form>
+  </section>
+
+  <section id="view" hidden>
+    <div style="display:flex;flex-direction:column;gap:18px">
+      <div class="top">
+        <div><h1 id="vTitle">13шка</h1><div class="sub" id="vSub"></div></div>
+        <div class="row" style="gap:6px">
+          <button class="btn small ghost" id="switchBar" hidden>Другой бар</button>
+          <button class="btn small ghost" id="logout">Выйти</button>
+        </div>
+      </div>
+      <div class="row">
+        <label style="flex:1;min-width:130px">Месяц<input type="month" id="month"></label>
+        <div class="seg" role="group" aria-label="Выплата" id="half">
+          <button data-h="1">1–15</button><button data-h="2">16–31</button><button data-h="0">Месяц</button>
+        </div>
+      </div>
+      <section style="display:flex;flex-direction:column;gap:10px">
+        <div class="ph"><h2>К выплате <span id="pLabel" class="num" style="color:var(--muted)"></span></h2>
+          <button class="btn small ghost" id="copy">Скопировать</button></div>
+        <div class="people" id="people"></div>
+        <div class="total-line" id="grand"></div>
+      </section>
+      <section style="display:flex;flex-direction:column;gap:10px">
+        <h2>Смены</h2>
+        <div class="panel log"><table>
+          <thead><tr><th>Дата</th><th>Бармен</th><th>Розлив</th><th>Фас.+вода</th><th>Наст.</th><th>Кухня+снеки</th><th>Итого</th></tr></thead>
+          <tbody id="rows"></tbody>
+        </table></div>
+      </section>
+      <div class="note" id="rateNote"></div>
+    </div>
+  </section>
+</div>
+
+<script>
+const VAULT=/*VAULT*/null;
+const BAR={'13':{t:'13шка',s:'Московская 33',c:'var(--accent)'},'epo':{t:'ЕпО',s:'Ещё по одной',c:'var(--epo)'}};
+const $=id=>document.getElementById(id);
+const rub=n=>Math.round(n).toLocaleString('ru-RU')+' ₽';
+const te=new TextEncoder(),td=new TextDecoder();
+const b64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+const unlocked={};let cur=null,canAll=false;
+let half=new Date().getDate()<=15?'1':'2';
+
+function show(id){['home','gate','view'].forEach(x=>$(x).hidden=x!==id);window.scrollTo(0,0);}
+async function pwKey(pw,salt){const base=await crypto.subtle.importKey('raw',te.encode(pw.normalize('NFC').trim().toLowerCase().replace(/ё/g,'е')),'PBKDF2',false,['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2',salt:b64(salt),iterations:VAULT.iter,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['decrypt']);}
+async function tryUnlock(bar,pw){
+  for(const w of VAULT.bars[bar].wraps){try{
+    const k=await pwKey(pw,w.salt);
+    const pk=await crypto.subtle.decrypt({name:'AES-GCM',iv:b64(w.iv)},k,b64(w.ct));
+    const priv=await crypto.subtle.importKey('pkcs8',pk,{name:'ECDH',namedCurve:'P-256'},false,['deriveKey']);
+    const d=VAULT.bars[bar].data;
+    const epub=await crypto.subtle.importKey('raw',b64(d.epub),{name:'ECDH',namedCurve:'P-256'},false,[]);
+    const ak=await crypto.subtle.deriveKey({name:'ECDH',public:epub},priv,{name:'AES-GCM',length:256},false,['decrypt']);
+    const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:b64(d.iv)},ak,b64(d.ct));
+    return JSON.parse(td.decode(pt));
+  }catch(e){}}
+  return null;}
+
+let gateBar=null;
+document.querySelectorAll('.tile').forEach(t=>t.onclick=()=>{
+  const b=t.dataset.bar;if(unlocked[b]){open(b);return;}
+  gateBar=b;$('gateTitle').textContent=BAR[b].t;$('gateBtn').className='btn'+(b==='epo'?' epo':'');
+  $('gateErr').hidden=true;$('pw').value='';show('gate');setTimeout(()=>$('pw').focus(),50);});
+$('gateBack').onclick=()=>show('home');
+$('gateForm').onsubmit=async e=>{e.preventDefault();const pw=$('pw').value;$('gateBtn').disabled=true;$('gateBtn').textContent='Проверяю…';
+  const data=await tryUnlock(gateBar,pw);
+  if(data){unlocked[gateBar]=data;const other=gateBar==='13'?'epo':'13';
+    const od=await tryUnlock(other,pw);if(od){unlocked[other]=od;canAll=true;}
+    $('pw').value='';open(gateBar);}
+  else $('gateErr').hidden=false;
+  $('gateBtn').disabled=false;$('gateBtn').textContent='Войти';};
+$('logout').onclick=()=>{for(const k in unlocked)delete unlocked[k];canAll=false;cur=null;show('home');};
+$('switchBar').onclick=()=>open(cur==='13'?'epo':'13');
+
+function open(bar){cur=bar;const d=unlocked[bar];
+  $('vTitle').textContent=BAR[bar].t;$('vTitle').style.color=BAR[bar].c;
+  $('vSub').textContent='Данные GainUp на '+d.updated;
+  $('half').style.setProperty('--c',BAR[bar].c);
+  $('switchBar').hidden=!(canAll&&unlocked[bar==='13'?'epo':'13']);
+  if(!$('month').value){const months=[...new Set(d.shifts.map(s=>s.date.slice(0,7)))].sort();$('month').value=months[months.length-1]||new Date().toISOString().slice(0,7);}
+  const r=d.rates;$('rateNote').textContent=`Ставка ${r.base} ₽ за смену · ${r.draft}% розлив · ${r.bottle} ₽ за фасовку и воду · ${r.liq} ₽ за пивн. настойки · ${r.kitchen}% кухня и снеки. Суммы — после скидок и оплаты баллами UDS. Учтены закрытые смены с продажами.`;
+  show('view');render();}
+
+function pay(s){const r=unlocked[cur].rates;const p={base:r.base,draft:s.draft*r.draft/100,bottle:s.bottle*r.bottle,liq:s.liq*r.liq,kitchen:s.kitchen*r.kitchen/100};p.total=p.base+p.draft+p.bottle+p.liq+p.kitchen;return p;}
+function lastDay(m){const[y,mm]=m.split('-').map(Number);return new Date(y,mm,0).getDate();}
+function periodLabel(){const m=$('month').value;const[y,mm]=m.split('-');const L=lastDay(m);
+  return half==='1'?`01–15.${mm}.${y}`:half==='2'?`16–${L}.${mm}.${y}`:`01–${L}.${mm}.${y}`;}
+function visible(){const m=$('month').value;return unlocked[cur].shifts.filter(s=>s.date.startsWith(m)&&(half==='0'||(half==='1'?+s.date.slice(8)<=15:+s.date.slice(8)>=16))).sort((a,b)=>a.date.localeCompare(b.date));}
+function esc(t){return String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+function render(){const list=visible();$('pLabel').textContent=periodLabel();
+  document.querySelectorAll('#half button').forEach(x=>x.setAttribute('aria-pressed',x.dataset.h===half));
+  const by={};list.forEach(s=>{const p=pay(s);const o=by[s.name]=by[s.name]||{n:0,base:0,draft:0,bottle:0,liq:0,kitchen:0,total:0};o.n++;for(const f in p)o[f]+=p[f];});
+  const names=Object.keys(by).sort((a,b)=>by[b].total-by[a].total);
+  $('people').innerHTML=names.length?names.map(n=>{const o=by[n];return `<div class="person"><div class="ph"><span class="name">${esc(n)}</span><span class="total num">${rub(o.total)}</span></div>
+    <div class="parts num"><span>Смены<b>${o.n} · ${rub(o.base)}</b></span><span>Розлив<b>${rub(o.draft)}</b></span><span>Фасовка, вода<b>${rub(o.bottle)}</b></span><span>Настойки<b>${rub(o.liq)}</b></span><span>Кухня, снеки<b>${rub(o.kitchen)}</b></span></div></div>`}).join('')
+    :'<div class="empty">В этом периоде закрытых смен нет</div>';
+  const g=names.reduce((a,n)=>a+by[n].total,0);
+  $('grand').innerHTML=names.length?`<span>Всего · ${list.length} смен</span><b class="num">${rub(g)}</b>`:'';
+  $('rows').innerHTML=list.length?list.map(s=>`<tr><td class="num">${s.date.slice(8)}.${s.date.slice(5,7)}</td><td>${esc(s.name)}</td><td class="num">${rub(s.draft)}</td><td class="num">${s.bottle}</td><td class="num">${s.liq}</td><td class="num">${rub(s.kitchen)}</td><td class="num"><b>${rub(pay(s).total)}</b></td></tr>`).join(''):'<tr><td colspan="7" class="empty">Нет смен</td></tr>';}
+$('month').onchange=render;
+document.querySelectorAll('#half button').forEach(b=>b.onclick=()=>{half=b.dataset.h;render();});
+$('copy').onclick=()=>{const by={};visible().forEach(s=>{by[s.name]=by[s.name]||{n:0,t:0};by[s.name].n++;by[s.name].t+=pay(s).total;});
+  const txt=`Зарплата ${BAR[cur].t}, ${periodLabel()}\n`+Object.entries(by).map(([n,o])=>`${n}: ${o.n} смен — ${rub(o.t)}`).join('\n');
+  navigator.clipboard.writeText(txt).then(()=>toast('Скопировано'),()=>toast('Не удалось скопировать'));};
+function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),1800);}
+$('updNote').textContent=VAULT?'Данные GainUp на '+VAULT.updated:'';
+</script>
