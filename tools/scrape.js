@@ -15,7 +15,7 @@ for(let id=top;id>0;id--){
   const det=[...d.querySelectorAll('table')].find(t=>t.innerText.includes('Время продажи'));const items=[];
   if(det)det.querySelectorAll('tr').forEach(tr=>{const c=[...tr.querySelectorAll('td')].map(x=>x.textContent.trim());
     if(c.length>=10&&/^\d+$/.test(c[0]))items.push({type:c[4],qty:n(c[5]),sum:n(c[9])});});
-  const it=items.reduce((a,i)=>a+i.sum,0);const k=it?paid/it:1;
+  const k=1; // суммы как в отчёте GainUp (до оплаты баллами UDS)
   const sum=ts=>items.filter(i=>ts.includes(i.type)).reduce((a,i)=>a+i.sum,0)*k;
   const cnt=ts=>items.filter(i=>ts.includes(i.type)&&i.sum>0).reduce((a,i)=>a+i.qty,0);
   const sub=req['Подразделение'];
