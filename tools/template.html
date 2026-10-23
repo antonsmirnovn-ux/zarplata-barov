@@ -67,6 +67,22 @@ th{color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;le
 th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
 .note{font-size:13px;color:var(--muted)}
 .empty{color:var(--muted);text-align:center;padding:18px;font-size:14px}
+.mnav{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.mnav b{font-family:var(--display);font-size:16px;font-weight:500;text-transform:capitalize}
+.legend{display:flex;gap:8px;flex-wrap:wrap}
+.chip{font-size:13px;font-weight:600;padding:4px 10px;border-radius:999px}
+.c0{background:var(--accent-soft);color:var(--accent)}.c1{background:var(--epo-soft);color:var(--epo)}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px;vertical-align:middle}
+.dot.c0{background:var(--accent)}.dot.c1{background:var(--epo)}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.wd{font-size:11px;color:var(--muted);text-align:center;text-transform:uppercase;letter-spacing:.04em;padding-bottom:2px}
+.day{background:var(--surface);border:1px solid var(--line);border-radius:8px;min-height:62px;padding:4px;display:flex;flex-direction:column;gap:3px;min-width:0}
+.day.we .dn{color:var(--accent)}
+.day.today{border:2px solid var(--fg)}
+.dn{font-size:12px;font-weight:600;font-variant-numeric:tabular-nums}
+.who{font-size:11px;font-weight:600;border-radius:5px;padding:2px 3px;line-height:1.15;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.who i{display:block;font-style:normal;font-weight:400;font-size:10px;opacity:.85}
+.who.plan{background:transparent;border:1px dashed currentColor}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:9px 14px;border-radius:9px;font-size:13px}
 </style>
 
@@ -91,14 +107,45 @@ th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
     </form>
   </section>
 
-  <section id="view" hidden>
-    <div style="display:flex;flex-direction:column;gap:18px">
+  <section id="barhome" hidden>
+    <div style="display:flex;flex-direction:column;gap:20px">
       <div class="top">
-        <div><h1 id="vTitle">13шка</h1><div class="sub" id="vSub"></div></div>
+        <div><h1 id="bTitle">13шка</h1><div class="sub" id="bSub"></div></div>
         <div class="row" style="gap:6px">
           <button class="btn small" id="switchBar" style="background:var(--tile);color:#1a120b" hidden>Другой бар</button>
           <button class="btn small ghost" id="logout">Выйти</button>
         </div>
+      </div>
+      <div class="tiles">
+        <button class="tile b13" id="goPay"><span class="t">Зарплата</span><span class="s" id="payHint"></span></button>
+        <button class="tile b13" id="goSched"><span class="t">График</span><span class="s" id="schedHint"></span></button>
+      </div>
+    </div>
+  </section>
+
+  <section id="sched" hidden>
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="top">
+        <div><h1>График</h1><div class="sub" id="sSub"></div></div>
+        <button class="btn small ghost back">Назад</button>
+      </div>
+      <div class="mnav">
+        <button class="btn small ghost" id="mPrev" aria-label="Предыдущий месяц">‹</button>
+        <b id="mLabel"></b>
+        <button class="btn small ghost" id="mNext" aria-label="Следующий месяц">›</button>
+      </div>
+      <div class="legend" id="legend"></div>
+      <div class="cal" id="cal"></div>
+      <div class="people" id="schedSum"></div>
+      <div class="note">Прошедшие дни — по факту из GainUp: кто открывал смену и во сколько. Плана на будущие дни пока нет.</div>
+    </div>
+  </section>
+
+  <section id="view" hidden>
+    <div style="display:flex;flex-direction:column;gap:18px">
+      <div class="top">
+        <div><h1 id="vTitle">Зарплата</h1><div class="sub" id="vSub"></div></div>
+        <button class="btn small ghost back">Назад</button>
       </div>
       <div class="row">
         <label style="flex:1;min-width:130px">Месяц<input type="month" id="month"></label>
@@ -137,7 +184,7 @@ const lsGet=k=>{try{return JSON.parse(localStorage.getItem(k))}catch(e){return n
 const lsSet=(k,v)=>{try{v==null?localStorage.removeItem(k):localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
 let half=new Date().getDate()<=15?'1':'2';
 
-function show(id){['home','gate','view'].forEach(x=>$(x).hidden=x!==id);window.scrollTo(0,0);}
+function show(id){['home','gate','barhome','view','sched'].forEach(x=>$(x).hidden=x!==id);window.scrollTo(0,0);}
 async function pwKey(pw,salt){const base=await crypto.subtle.importKey('raw',te.encode(pw.normalize('NFC').trim().toLowerCase().replace(/ё/g,'е')),'PBKDF2',false,['deriveKey']);
   return crypto.subtle.deriveKey({name:'PBKDF2',salt:b64(salt),iterations:VAULT.iter,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['decrypt']);}
 async function tryUnlock(bar,pw){
@@ -171,15 +218,46 @@ $('logout').onclick=()=>{for(const k in unlocked)delete unlocked[k];canAll=false
 $('switchBar').onclick=()=>open(cur==='13'?'epo':'13');
 
 function open(bar){cur=bar;lsSet('zp-bar',bar);const d=unlocked[bar];
-  $('vTitle').textContent=BAR[bar].t;$('vTitle').style.color=BAR[bar].c;
-  $('vSub').textContent='Данные GainUp на '+d.updated;
+  $('bTitle').textContent=BAR[bar].t;$('bTitle').style.color=BAR[bar].c;
+  $('bSub').textContent='Данные GainUp на '+d.updated;
+  $('vSub').textContent=BAR[bar].t+' · данные на '+d.updated;
+  $('sSub').textContent=BAR[bar].t+' · данные на '+d.updated;
   $('half').style.setProperty('--c',BAR[bar].c);
   $('switchBar').hidden=!(canAll&&unlocked[bar==='13'?'epo':'13']);
   if(!$('month').value){const months=[...new Set(d.shifts.map(s=>s.date.slice(0,7)))].sort();$('month').value=months[months.length-1]||new Date().toISOString().slice(0,7);}
   const names=[...new Set(d.shifts.map(s=>s.name))].sort((a,b)=>a.localeCompare(b,'ru'));
   if(who[cur]&&!names.includes(who[cur]))who[cur]='';
   $('who').innerHTML='<option value="">Все бармены</option>'+names.map(n=>`<option${who[cur]===n?' selected':''}>${esc(n)}</option>`).join('');
-  show('view');render();}
+  render();
+  const tot=visible().reduce((a,s)=>a+pay(s).total,0);
+  $('payHint').textContent=(who[cur]?who[cur]+' · ':'')+periodLabel()+' · '+rub(tot);
+  const today=new Date().toISOString().slice(0,10);const on=(d.sched||[]).filter(s=>s.date===today);
+  $('schedHint').textContent=on.length?'Сегодня: '+on.map(s=>s.name).join(', '):'Сегодня смена ещё не открыта';
+  show('barhome');}
+document.querySelectorAll('.back').forEach(b=>b.onclick=()=>open(cur));
+$('goPay').onclick=()=>{show('view');render();};
+$('goSched').onclick=()=>{sm=new Date().toISOString().slice(0,7);show('sched');renderSched();};
+let sm=new Date().toISOString().slice(0,7);
+function shiftMonth(k){const[y,m]=sm.split('-').map(Number);const d=new Date(y,m-1+k,1);sm=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');renderSched();}
+$('mPrev').onclick=()=>shiftMonth(-1);$('mNext').onclick=()=>shiftMonth(1);
+const MON=['январь','февраль','март','апрель','май','июнь','июль','август','сентябрь','октябрь','ноябрь','декабрь'];
+function hrs(s){if(!s.close)return null;const a=new Date(s.date+'T'+s.open),b=new Date(s.close);return (b-a)/36e5;}
+function fmtH(h){const H=Math.floor(h),M=Math.round((h-H)*60);return H+' ч'+(M?' '+M+' мин':'');}
+function renderSched(){const d=unlocked[cur];const list=(d.sched||[]).filter(s=>s.date.startsWith(sm)&&(s.sales>0||!s.close));
+  const plan=(d.plan||[]).filter(s=>s.date.startsWith(sm));
+  const names=[...new Set([...(d.sched||[]),...(d.plan||[])].map(s=>s.name))].sort((a,b)=>a.localeCompare(b,'ru'));
+  const col=n=>'c'+(names.indexOf(n)%2);
+  const[y,m]=sm.split('-').map(Number);$('mLabel').textContent=MON[m-1]+' '+y;
+  $('legend').innerHTML=names.map(n=>`<span class="chip ${col(n)}">${esc(n)}</span>`).join('');
+  const first=(new Date(y,m-1,1).getDay()+6)%7, L=new Date(y,m,0).getDate(), today=new Date().toISOString().slice(0,10);
+  let cells=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].map(w=>`<div class="wd">${w}</div>`).join('')+'<div></div>'.repeat(first);
+  for(let i=1;i<=L;i++){const ds=sm+'-'+String(i).padStart(2,'0');const f=list.filter(s=>s.date===ds);const p=plan.filter(s=>s.date===ds&&!f.length);
+    const we=((first+i-1)%7)>=5;
+    cells+=`<div class="day${ds===today?' today':''}${we?' we':''}"><span class="dn">${i}</span>${f.map(s=>`<span class="who ${col(s.name)}">${esc(s.name.split(' ')[0])}<i>${s.open}${s.close?'':' · сейчас'}</i></span>`).join('')}${p.map(s=>`<span class="who plan ${col(s.name)}">${esc(s.name.split(' ')[0])}<i>план</i></span>`).join('')}</div>`;}
+  $('cal').innerHTML=cells;
+  $('schedSum').innerHTML=names.map(n=>{const mine=list.filter(s=>s.name===n);const h=mine.reduce((a,s)=>a+(hrs(s)||0),0);
+    return `<div class="person"><div class="ph"><span class="name"><span class="dot ${col(n)}"></span>${esc(n)}</span><span class="total num">${mine.length} ${mine.length%10==1&&mine.length%100!=11?'смена':(mine.length%10>=2&&mine.length%10<=4&&(mine.length%100<10||mine.length%100>=20))?'смены':'смен'}</span></div>
+    <div class="lines num"><div class="ln"><span>Отработано</span><span class="v"></span><b>${fmtH(h)}</b></div><div class="ln"><span>Средняя смена</span><span class="v"></span><b>${mine.length?fmtH(h/mine.filter(s=>s.close).length||0):'—'}</b></div></div></div>`}).join('')||'<div class="empty">Смен в этом месяце нет</div>';}
 
 function pay(s){const r=unlocked[cur].rates;const p={base:r.base,draft:s.draft*r.draft/100,bottle:s.bottle*r.bottle,liq:s.liq*r.liq,kitchen:s.kitchen*r.kitchen/100};p.total=p.base+p.draft+p.bottle+p.liq+p.kitchen;return p;}
 function lastDay(m){const[y,mm]=m.split('-').map(Number);return new Date(y,mm,0).getDate();}

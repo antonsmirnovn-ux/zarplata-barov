@@ -6,7 +6,7 @@ const RATES={base:1000,draft:10,bottle:10,liq:20,kitchen:5};
 const K=JSON.parse(fs.readFileSync(T+'/keys.json')),D=JSON.parse(fs.readFileSync(process.argv[2]));
 const vault={iter:K.iter,updated:D.updated,stamp:D.stamp,bars:{}};
 for(const bar of ['13','epo']){
-  const payload={updated:D.updated,rates:RATES,shifts:D.shifts.filter(s=>s.bar===bar).map(({gid,bar,other,...s})=>s)};
+  const payload={updated:D.updated,rates:RATES,shifts:D.shifts.filter(s=>s.bar===bar).map(({gid,bar,other,...s})=>s),sched:(D.sched||[]).filter(s=>s.bar===bar).map(({bar,...s})=>s),plan:(D.plan||[]).filter(s=>s.bar===bar).map(({bar,...s})=>s)};
   const pub=await subtle.importKey('raw',Buffer.from(K.bars[bar].pub,'base64'),{name:'ECDH',namedCurve:'P-256'},false,[]);
   const eph=await subtle.generateKey({name:'ECDH',namedCurve:'P-256'},true,['deriveKey']);
   const ak=await subtle.deriveKey({name:'ECDH',public:pub},eph.privateKey,{name:'AES-GCM',length:256},false,['encrypt']);
