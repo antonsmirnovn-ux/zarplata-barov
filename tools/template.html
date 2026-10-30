@@ -132,6 +132,7 @@ th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
       <div class="tiles">
         <button class="tile b13" id="goPay"><span class="t">Зарплата</span><span class="s" id="payHint"></span></button>
         <button class="tile b13" id="goSched"><span class="t">График</span><span class="s" id="schedHint"></span></button>
+        <button class="tile b13" id="goCook" hidden><span class="t">Повар</span><span class="s" id="cookHint"></span></button>
       </div>
     </div>
   </section>
@@ -151,6 +152,27 @@ th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
       <div class="cal" id="cal"></div>
       <div class="people" id="schedSum"></div>
       <div class="note" id="schedNote"></div>
+    </div>
+  </section>
+
+  <section id="cook" hidden>
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="top">
+        <div><h1>Повар</h1><div class="sub" id="cSub"></div></div>
+        <button class="btn small ghost back">Назад</button>
+      </div>
+      <div class="row">
+        <label style="flex:1;min-width:130px">Месяц<input type="month" id="cMonth"></label>
+        <div class="seg" role="group" aria-label="Выплата" id="cHalf">
+          <button data-h="1">1–15</button><button data-h="2">16–31</button><button data-h="0">Месяц</button>
+        </div>
+      </div>
+      <div class="person" id="cCard"></div>
+      <div class="panel log"><table>
+        <thead><tr><th>Дата</th><th>Выручка кухни</th><th>7%</th></tr></thead>
+        <tbody id="cRows"></tbody>
+      </table></div>
+      <div class="note">Видно только под паролем владельца.</div>
     </div>
   </section>
 
@@ -206,9 +228,17 @@ const lsGet=k=>{try{return JSON.parse(localStorage.getItem(k))}catch(e){return n
 const lsSet=(k,v)=>{try{v==null?localStorage.removeItem(k):localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
 let half=new Date().getDate()<=15?'1':'2';
 
-function show(id){['home','gate','barhome','view','sched'].forEach(x=>$(x).hidden=x!==id);window.scrollTo(0,0);}
+function show(id){['home','gate','barhome','view','sched','cook'].forEach(x=>$(x).hidden=x!==id);window.scrollTo(0,0);}
 async function pwKey(pw,salt){const base=await crypto.subtle.importKey('raw',te.encode(pw.normalize('NFC').trim().toLowerCase().replace(/ё/g,'е')),'PBKDF2',false,['deriveKey']);
   return crypto.subtle.deriveKey({name:'PBKDF2',salt:b64(salt),iterations:VAULT.iter,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['decrypt']);}
+async function tryOwn(pw){if(!VAULT.own)return null;
+  for(const w of VAULT.own.wraps){try{
+    const k=await pwKey(pw,w.salt);const pk=await crypto.subtle.decrypt({name:'AES-GCM',iv:b64(w.iv)},k,b64(w.ct));
+    const priv=await crypto.subtle.importKey('pkcs8',pk,{name:'ECDH',namedCurve:'P-256'},false,['deriveKey']);
+    const d=VAULT.own.data;const ep=await crypto.subtle.importKey('raw',b64(d.epub),{name:'ECDH',namedCurve:'P-256'},false,[]);
+    const ak=await crypto.subtle.deriveKey({name:'ECDH',public:ep},priv,{name:'AES-GCM',length:256},false,['decrypt']);
+    return JSON.parse(td.decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:b64(d.iv)},ak,b64(d.ct))));}catch(e){}}return null;}
+let own=null;
 async function tryUnlock(bar,pw){
   for(const w of VAULT.bars[bar].wraps){try{
     const k=await pwKey(pw,w.salt);
@@ -237,11 +267,12 @@ $('gateForm').onsubmit=async e=>{e.preventDefault();const pw=$('pw').value;$('ga
   const data=await tryUnlock(gateBar,pw);
   if(data){unlocked[gateBar]=data;const other=gateBar==='13'?'epo':'13';
     const od=await tryUnlock(other,pw);if(od){unlocked[other]=od;canAll=true;}
+    own=await tryOwn(pw);
     const saved=lsGet(LS)||{};saved[gateBar]=pw;if(canAll)saved[other]=pw;lsSet(LS,saved);
     $('pw').value='';open(gateBar);}
   else $('gateErr').hidden=false;
   $('gateBtn').disabled=false;$('gateBtn').textContent='Войти';};
-$('logout').onclick=()=>{for(const k in unlocked)delete unlocked[k];canAll=false;cur=null;lsSet(LS,null);lsSet('zp-who',null);show('home');};
+$('logout').onclick=()=>{own=null;for(const k in unlocked)delete unlocked[k];canAll=false;cur=null;lsSet(LS,null);lsSet('zp-who',null);show('home');};
 $('switchBar').onclick=()=>open(cur==='13'?'epo':'13');
 
 function open(bar){cur=bar;lsSet('zp-bar',bar);const d=unlocked[bar];
@@ -260,7 +291,24 @@ function open(bar){cur=bar;lsSet('zp-bar',bar);const d=unlocked[bar];
   $('payHint').textContent=(who[cur]?who[cur]+' · ':'')+periodLabel()+' · '+rub(tot);
   const ls=(d.sched||[]).filter(s=>s.sales>0||!s.close).sort((a,b)=>b.date.localeCompare(a.date))[0];
   $('schedHint').textContent=ls?'Последняя смена: '+ls.date.slice(8)+'.'+ls.date.slice(5,7)+' · '+ls.name:'';
+  const showCook=!!(own&&own.cook.bar===bar);$('goCook').hidden=!showCook;
+  if(showCook){const c=cookCalc(todayStr().slice(0,7),half);$('cookHint').textContent=own.cook.name+' · '+c.label+' · '+rub(c.total);}
   show('barhome');}
+let cHalf=null;
+function cookCalc(m,h){const C=own.cook;const L=lastDay(m);const days=own.days.filter(x=>x.date.startsWith(m)&&(h==='0'||(h==='1'?+x.date.slice(8)<=15:+x.date.slice(8)>=16)));
+  const rev=days.reduce((a,x)=>a+(x.kit||0),0);const base=h==='0'?C.base:C.base/2;const pct=rev*C.pct/100;
+  const[y,mm]=m.split('-');const label=h==='1'?`01–15.${mm}`:h==='2'?`16–${L}.${mm}`:`01–${L}.${mm}`;
+  return {days,rev,base,pct,total:base+pct,label:label+'.'+y};}
+function renderCook(){const m=$('cMonth').value;const c=cookCalc(m,cHalf);const C=own.cook;
+  document.querySelectorAll('#cHalf button').forEach(x=>x.setAttribute('aria-pressed',x.dataset.h===cHalf));
+  $('cCard').innerHTML=`<div class="ph"><span class="name">${esc(C.name)}</span><span class="total num">${rub(c.total)}</span></div>
+   <div class="lines num"><div class="ln"><span>Оклад</span><span class="v">${cHalf==='0'?'за месяц':'½ от '+rub(C.base)}</span><b>${rub(c.base)}</b></div>
+   <div class="ln"><span>Кухня ${C.pct}%</span><span class="v">${rub(c.rev)}</span><b>${rub(c.pct)}</b></div></div>`;
+  $('cRows').innerHTML=c.days.length?c.days.sort((a,b)=>a.date.localeCompare(b.date)).map(x=>`<tr><td class="num">${x.date.slice(8)}.${x.date.slice(5,7)}</td><td class="num">${x.kit==null?'—':rub(x.kit)}</td><td class="num"><b>${x.kit==null?'—':rub(x.kit*C.pct/100)}</b></td></tr>`).join(''):'<tr><td colspan="3" class="empty">Нет смен</td></tr>';}
+$('goCook').onclick=()=>{cHalf=half;$('cMonth').value=$('month').value||todayStr().slice(0,7);$('cSub').textContent='ЕпО · данные на '+unlocked[cur].updated;show('cook');renderCook();};
+$('cMonth').onchange=renderCook;
+document.querySelectorAll('#cHalf button').forEach(b=>b.onclick=()=>{cHalf=b.dataset.h;renderCook();});
+$('cHalf').style.setProperty('--c','var(--accent)');
 document.querySelectorAll('.back').forEach(b=>b.onclick=()=>open(cur));
 $('goPay').onclick=()=>{show('view');render();};
 $('goSched').onclick=()=>{sm=todayStr().slice(0,7);show('sched');renderSched();loadPlan();};
@@ -342,6 +390,7 @@ function toast(t){const d=document.createElement('div');d.className='toast';d.te
 $('updNote').textContent=VAULT?'Данные GainUp на '+VAULT.updated:'';
 (async()=>{const saved=lsGet(LS);if(!saved||!VAULT)return;let first=null;
   for(const b of ['13','epo']){if(!saved[b])continue;const d=await tryUnlock(b,saved[b]);if(d){unlocked[b]=d;first=first||b;}else{delete saved[b];}}
+  if(saved['13']&&saved['13']===saved['epo'])own=await tryOwn(saved['13']);
   lsSet(LS,Object.keys(saved).length?saved:null);
   canAll=!!(unlocked['13']&&unlocked['epo']);
   const last=lsGet('zp-bar');if(last&&unlocked[last])open(last);else if(first&&!canAll)open(first);})();
