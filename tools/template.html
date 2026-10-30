@@ -161,18 +161,13 @@ th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
         <div><h1>Повар</h1><div class="sub" id="cSub"></div></div>
         <button class="btn small ghost back">Назад</button>
       </div>
-      <div class="row">
-        <label style="flex:1;min-width:130px">Месяц<input type="month" id="cMonth"></label>
-        <div class="seg" role="group" aria-label="Выплата" id="cHalf">
-          <button data-h="1">1–15</button><button data-h="2">16–31</button><button data-h="0">Месяц</button>
-        </div>
-      </div>
+      <label>Месяц<input type="month" id="cMonth"></label>
       <div class="person" id="cCard"></div>
       <div class="panel log"><table>
         <thead><tr><th>Дата</th><th>Кухня до скидок</th><th>7%</th></tr></thead>
         <tbody id="cRows"></tbody>
       </table></div>
-      <div class="note">Выручка кухни ЕпО до скидок, без бесплатного питания персонала. Оклад 45 000 ₽ в месяц, по 22 500 ₽ за половину. Видно только под паролем владельца.</div>
+      <div class="note">Выручка кухни ЕпО до скидок, без бесплатного питания персонала. Оклад 45 000 ₽ в месяц, аванс 10 000 ₽ каждый понедельник, остаток и 7% — в начале следующего месяца. Видно только под паролем владельца.</div>
     </div>
   </section>
 
@@ -292,23 +287,24 @@ function open(bar){cur=bar;lsSet('zp-bar',bar);const d=unlocked[bar];
   const ls=(d.sched||[]).filter(s=>s.sales>0||!s.close).sort((a,b)=>b.date.localeCompare(a.date))[0];
   $('schedHint').textContent=ls?'Последняя смена: '+ls.date.slice(8)+'.'+ls.date.slice(5,7)+' · '+ls.name:'';
   const showCook=!!(own&&own.cook.bar===bar);$('goCook').hidden=!showCook;
-  if(showCook){const c=cookCalc(todayStr().slice(0,7),half);$('cookHint').textContent=own.cook.name+' · '+c.label+' · '+rub(c.total);}
+  if(showCook){const c=cookCalc(todayStr().slice(0,7));$('cookHint').textContent=own.cook.name+' · к доплате '+rub(c.rest);}
   show('barhome');}
-let cHalf=null;
-function cookCalc(m,h){const C=own.cook;const L=lastDay(m);const days=own.days.filter(x=>x.date.startsWith(m)&&(h==='0'||(h==='1'?+x.date.slice(8)<=15:+x.date.slice(8)>=16)));
-  const rev=days.reduce((a,x)=>a+(x.kit||0),0);const base=h==='0'?C.base:C.base/2;const pct=rev*C.pct/100;
-  const[y,mm]=m.split('-');const label=h==='1'?`01–15.${mm}`:h==='2'?`16–${L}.${mm}`:`01–${L}.${mm}`;
-  return {days,rev,base,pct,total:base+pct,label:label+'.'+y};}
-function renderCook(){const m=$('cMonth').value;const c=cookCalc(m,cHalf);const C=own.cook;
-  document.querySelectorAll('#cHalf button').forEach(x=>x.setAttribute('aria-pressed',x.dataset.h===cHalf));
+const ADV=10000;
+function mondays(m){const[y,mm]=m.split('-').map(Number);const r=[];for(let d=1;d<=new Date(y,mm,0).getDate();d++){const dt=new Date(y,mm-1,d);if(dt.getDay()===1)r.push(m+'-'+String(d).padStart(2,'0'));}return r;}
+function cookCalc(m){const C=own.cook;const days=own.days.filter(x=>x.date.startsWith(m));
+  const rev=days.reduce((a,x)=>a+(x.kit||0),0);const pct=rev*C.pct/100;const mons=mondays(m);const adv=mons.length*ADV;
+  return {days,rev,pct,base:C.base,total:C.base+pct,mons,adv,rest:C.base+pct-adv};}
+function renderCook(){const m=$('cMonth').value;const c=cookCalc(m);const C=own.cook;const t=todayStr();
+  const[y,mm]=m.split('-');const L=new Date(+y,+mm,0).getDate();const done=t>m+'-'+String(L).padStart(2,'0');
   $('cCard').innerHTML=`<div class="ph"><span class="name">${esc(C.name)}</span><span class="total num">${rub(c.total)}</span></div>
-   <div class="lines num"><div class="ln"><span>Оклад</span><span class="v">${cHalf==='0'?'за месяц':'½ от '+rub(C.base)}</span><b>${rub(c.base)}</b></div>
-   <div class="ln"><span>Кухня ${C.pct}%</span><span class="v">${rub(c.rev)}</span><b>${rub(c.pct)}</b></div></div>`;
+   <div class="lines num">
+   <div class="ln"><span>Оклад за месяц</span><span class="v"></span><b>${rub(c.base)}</b></div>
+   <div class="ln"><span>Кухня ${C.pct}%</span><span class="v">${rub(c.rev)}</span><b>${rub(c.pct)}</b></div>
+   ${c.mons.map(d=>`<div class="ln"><span>Аванс ${d.slice(8)}.${d.slice(5,7)}, пн</span><span class="v">${d<=t?'выплачен':'предстоит'}</span><b>−${rub(ADV)}</b></div>`).join('')}
+   <div class="ln"><span><b style="color:var(--fg)">${done?'К доплате за месяц':'К доплате на сейчас'}</b></span><span class="v">${done?'':'месяц не закончен'}</span><b>${rub(c.rest)}</b></div></div>`;
   $('cRows').innerHTML=c.days.length?c.days.sort((a,b)=>a.date.localeCompare(b.date)).map(x=>`<tr><td class="num">${x.date.slice(8)}.${x.date.slice(5,7)}</td><td class="num">${x.kit==null?'—':rub(x.kit)}</td><td class="num"><b>${x.kit==null?'—':rub(x.kit*C.pct/100)}</b></td></tr>`).join(''):'<tr><td colspan="3" class="empty">Нет смен</td></tr>';}
-$('goCook').onclick=()=>{cHalf=half;$('cMonth').value=$('month').value||todayStr().slice(0,7);$('cSub').textContent='ЕпО · данные на '+unlocked[cur].updated;show('cook');renderCook();};
+$('goCook').onclick=()=>{$('cMonth').value=todayStr().slice(0,7);$('cSub').textContent='ЕпО · данные на '+unlocked[cur].updated;show('cook');renderCook();};
 $('cMonth').onchange=renderCook;
-document.querySelectorAll('#cHalf button').forEach(b=>b.onclick=()=>{cHalf=b.dataset.h;renderCook();});
-$('cHalf').style.setProperty('--c','var(--accent)');
 document.querySelectorAll('.back').forEach(b=>b.onclick=()=>open(cur));
 $('goPay').onclick=()=>{show('view');render();};
 $('goSched').onclick=()=>{sm=todayStr().slice(0,7);show('sched');renderSched();loadPlan();};
