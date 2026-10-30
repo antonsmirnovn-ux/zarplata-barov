@@ -17,7 +17,7 @@ for(let id=top;id>0;id--){
   if(!req['Закрыта']||paid<=0)continue;
   const det=[...d.querySelectorAll('table')].find(t=>t.innerText.includes('Время продажи'));const items=[];
   if(det)det.querySelectorAll('tr').forEach(tr=>{const c=[...tr.querySelectorAll('td')].map(x=>x.textContent.trim());
-    if(c.length>=10&&/^\d+$/.test(c[0]))items.push({type:c[4],qty:n(c[5]),sum:n(c[9])});});
+    if(c.length>=10&&/^\d+$/.test(c[0]))items.push({type:c[4],qty:n(c[5]),sum:n(c[9]),gross:n(c[7])});});
   const k=1; // суммы как в отчёте GainUp (до оплаты баллами UDS)
   const sum=ts=>items.filter(i=>ts.includes(i.type)).reduce((a,i)=>a+i.sum,0)*k;
   const cnt=ts=>items.filter(i=>ts.includes(i.type)&&i.sum>0).reduce((a,i)=>a+i.qty,0);
@@ -25,7 +25,7 @@ for(let id=top;id>0;id--){
   const name=(req['Автор']||'').replace(/\s+/g,' ').replace(/\s*(13шка|Еще по одной|Ещё по одной|ЕПО)\s*/gi,' ').trim();
   out.push({gid:id,date:opened.slice(0,10),bar:sub==='Московская 33'?'13':'epo',name,
     draft:Math.round(sum(['Пиво разливное'])*100)/100,bottle:cnt(['пиво фасовка','Вода']),liq:cnt(['настойки']),
-    kitchen:Math.round(sum(['кухня','Снеки'])*100)/100,kit:Math.round(sum(['кухня'])*100)/100});
+    kitchen:Math.round(sum(['кухня','Снеки'])*100)/100,kit:Math.round(items.filter(i=>i.type==='кухня'&&i.sum>0).reduce((a,i)=>a+i.gross,0)*100)/100});
 }
 const now=new Date(Date.now()+3*3600e3).toISOString();
 return JSON.stringify({updated:now.slice(8,10)+'.'+now.slice(5,7)+'.'+now.slice(0,4)+', '+now.slice(11,16),stamp:now.slice(0,16),shifts:out,sched});
