@@ -21,6 +21,7 @@ if(K.own){const COOK={name:'Саня Янтальцев',bar:'epo',base:45000,pc
   const eph=await subtle.generateKey({name:'ECDH',namedCurve:'P-256'},true,['deriveKey']);
   const ak=await subtle.deriveKey({name:'ECDH',public:pub},eph.privateKey,{name:'AES-GCM',length:256},false,['encrypt']);
   const iv=rnd(12);
+  vault.ownx=fs.existsSync(T+'/ownx.json')?JSON.parse(fs.readFileSync(T+'/ownx.json')):null;
   vault.own={wraps:K.own.wraps,data:{epub:b64(await subtle.exportKey('raw',eph.publicKey)),iv:b64(iv),ct:b64(await subtle.encrypt({name:'AES-GCM',iv},ak,new TextEncoder().encode(JSON.stringify(payload))))}};}
 const h=fs.readFileSync(T+'/template.html','utf8').replace('/*VAULT*/null',JSON.stringify(vault));
 const head=`<!doctype html>

@@ -132,7 +132,8 @@ th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
       <div class="tiles">
         <button class="tile b13" id="goPay"><span class="t">Зарплата</span><span class="s" id="payHint"></span></button>
         <button class="tile b13" id="goSched"><span class="t">График</span><span class="s" id="schedHint"></span></button>
-        <button class="tile b13" id="goCook" hidden><span class="t">Повар</span><span class="s" id="cookHint"></span></button>
+        <button class="tile b13" id="goCook" hidden><span class="t">Саня</span><span class="s" id="cookHint"></span></button>
+        <button class="tile b13" id="goDiana" hidden><span class="t">Диана</span><span class="s" id="dianaHint"></span></button>
       </div>
     </div>
   </section>
@@ -158,7 +159,7 @@ th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
   <section id="cook" hidden>
     <div style="display:flex;flex-direction:column;gap:16px">
       <div class="top">
-        <div><h1>Повар</h1><div class="sub" id="cSub"></div></div>
+        <div><h1>Саня</h1><div class="sub" id="cSub"></div></div>
         <button class="btn small ghost back">Назад</button>
       </div>
       <label>Месяц<input type="month" id="cMonth"></label>
@@ -168,6 +169,18 @@ th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
         <tbody id="cRows"></tbody>
       </table></div>
       <div class="note">Выручка кухни обоих баров (13шка + ЕпО) из отчётов GainUp. Оклад 45 000 ₽ в месяц, аванс 10 000 ₽ каждый понедельник, остаток и 7% — в начале следующего месяца. Видно только под паролем владельца.</div>
+    </div>
+  </section>
+
+  <section id="diana" hidden>
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="top">
+        <div><h1>Диана</h1><div class="sub">Повар ЕпО</div></div>
+        <button class="btn small ghost back">Назад</button>
+      </div>
+      <label>Месяц<input type="month" id="dMonth"></label>
+      <div class="person" id="dCard"></div>
+      <div class="note">3 200 ₽ за смену и 3 000 ₽ разово в конце месяца. Количество смен за месяц вносится вручную. Видно только под паролем владельца.</div>
     </div>
   </section>
 
@@ -223,7 +236,7 @@ const lsGet=k=>{try{return JSON.parse(localStorage.getItem(k))}catch(e){return n
 const lsSet=(k,v)=>{try{v==null?localStorage.removeItem(k):localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
 let half=new Date().getDate()<=15?'1':'2';
 
-function show(id){['home','gate','barhome','view','sched','cook'].forEach(x=>$(x).hidden=x!==id);window.scrollTo(0,0);}
+function show(id){['home','gate','barhome','view','sched','cook','diana'].forEach(x=>$(x).hidden=x!==id);window.scrollTo(0,0);}
 async function pwKey(pw,salt){const base=await crypto.subtle.importKey('raw',te.encode(pw.normalize('NFC').trim().toLowerCase().replace(/ё/g,'е')),'PBKDF2',false,['deriveKey']);
   return crypto.subtle.deriveKey({name:'PBKDF2',salt:b64(salt),iterations:VAULT.iter,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['decrypt']);}
 async function tryOwn(pw){if(!VAULT.own)return null;
@@ -232,7 +245,11 @@ async function tryOwn(pw){if(!VAULT.own)return null;
     const priv=await crypto.subtle.importKey('pkcs8',pk,{name:'ECDH',namedCurve:'P-256'},false,['deriveKey']);
     const d=VAULT.own.data;const ep=await crypto.subtle.importKey('raw',b64(d.epub),{name:'ECDH',namedCurve:'P-256'},false,[]);
     const ak=await crypto.subtle.deriveKey({name:'ECDH',public:ep},priv,{name:'AES-GCM',length:256},false,['decrypt']);
-    return JSON.parse(td.decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:b64(d.iv)},ak,b64(d.ct))));}catch(e){}}return null;}
+    const o=JSON.parse(td.decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:b64(d.iv)},ak,b64(d.ct))));
+    const x=VAULT.ownx;if(x){try{const ep2=await crypto.subtle.importKey('raw',b64(x.epub),{name:'ECDH',namedCurve:'P-256'},false,[]);
+      const k2=await crypto.subtle.deriveKey({name:'ECDH',public:ep2},priv,{name:'AES-GCM',length:256},false,['decrypt']);
+      o.extra=JSON.parse(td.decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:b64(x.iv)},k2,b64(x.ct))));}catch(e){}}
+    return o;}catch(e){}}return null;}
 let own=null;
 async function tryUnlock(bar,pw){
   for(const w of VAULT.bars[bar].wraps){try{
@@ -287,7 +304,9 @@ function open(bar){cur=bar;lsSet('zp-bar',bar);const d=unlocked[bar];
   const ls=(d.sched||[]).filter(s=>s.sales>0||!s.close).sort((a,b)=>b.date.localeCompare(a.date))[0];
   $('schedHint').textContent=ls?'Последняя смена: '+ls.date.slice(8)+'.'+ls.date.slice(5,7)+' · '+ls.name:'';
   const showCook=!!(own&&own.cook.bar===bar);$('goCook').hidden=!showCook;
-  if(showCook){const c=cookCalc(todayStr().slice(0,7));$('cookHint').textContent=own.cook.name+' · к доплате '+rub(c.rest);}
+  if(showCook){const c=cookCalc(todayStr().slice(0,7));$('cookHint').textContent='к доплате '+rub(c.rest);}
+  const D=own&&own.extra&&own.extra.diana;$('goDiana').hidden=!(showCook&&D);
+  if(showCook&&D){const r=dianaCalc(todayStr().slice(0,7));$('dianaHint').textContent=r.n?r.n+' смен · '+rub(r.total):'смены не внесены';}
   show('barhome');}
 const ADV=10000;
 function mondays(m){const[y,mm]=m.split('-').map(Number);const r=[];for(let d=1;d<=new Date(y,mm,0).getDate();d++){const dt=new Date(y,mm-1,d);if(dt.getDay()===1)r.push(m+'-'+String(d).padStart(2,'0'));}return r;}
@@ -306,6 +325,14 @@ function renderCook(){const m=$('cMonth').value;const c=cookCalc(m);const C=own.
   $('cRows').innerHTML=Object.keys(byd).length?Object.keys(byd).sort().map(ds=>{const o=byd[ds],t=o['13']+o.epo;return `<tr><td class="num">${ds.slice(8)}.${ds.slice(5,7)}</td><td class="num">${rub(o['13'])}</td><td class="num">${rub(o.epo)}</td><td class="num">${rub(t)}</td><td class="num"><b>${rub(t*C.pct/100)}</b></td></tr>`}).join(''):'<tr><td colspan="5" class="empty">Нет смен</td></tr>';}
 $('goCook').onclick=()=>{$('cMonth').value=todayStr().slice(0,7);$('cSub').textContent='Данные на '+unlocked[cur].updated;show('cook');renderCook();};
 $('cMonth').onchange=renderCook;
+function dianaCalc(m){const D=own.extra.diana;const n=(D.shifts||{})[m]||0;return {n,pay:n*D.perShift,bonus:n?D.bonus:0,total:n*D.perShift+(n?D.bonus:0)};}
+function renderDiana(){const m=$('dMonth').value;const D=own.extra.diana;const r=dianaCalc(m);
+  $('dCard').innerHTML=`<div class="ph"><span class="name">${esc(D.name)}</span><span class="total num">${rub(r.total)}</span></div>
+   <div class="lines num"><div class="ln"><span>Смены</span><span class="v">${r.n} × ${rub(D.perShift)}</span><b>${rub(r.pay)}</b></div>
+   <div class="ln"><span>Разово в конце месяца</span><span class="v"></span><b>${rub(r.bonus)}</b></div></div>
+   ${r.n?'':'<div class="empty">Смены за этот месяц ещё не внесены</div>'}`;}
+$('goDiana').onclick=()=>{$('dMonth').value=todayStr().slice(0,7);show('diana');renderDiana();};
+$('dMonth').onchange=renderDiana;
 document.querySelectorAll('.back').forEach(b=>b.onclick=()=>open(cur));
 $('goPay').onclick=()=>{show('view');render();};
 $('goSched').onclick=()=>{sm=todayStr().slice(0,7);show('sched');renderSched();loadPlan();};
