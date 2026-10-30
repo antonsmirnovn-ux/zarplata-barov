@@ -25,7 +25,7 @@ for(let id=top;id>0;id--){
   const name=(req['Автор']||'').replace(/\s+/g,' ').replace(/\s*(13шка|Еще по одной|Ещё по одной|ЕПО)\s*/gi,' ').trim();
   out.push({gid:id,date:opened.slice(0,10),bar:sub==='Московская 33'?'13':'epo',name,
     draft:Math.round(sum(['Пиво разливное'])*100)/100,bottle:cnt(['пиво фасовка','Вода']),liq:cnt(['настойки']),
-    kitchen:Math.round(sum(['кухня','Снеки'])*100)/100,kit:Math.round(items.filter(i=>i.type==='кухня'&&i.sum>0).reduce((a,i)=>a+i.gross,0)*100)/100});
+    kitchen:Math.round(sum(['кухня','Снеки'])*100)/100,kit:Math.round(sum(['кухня'])*100)/100});
 }
 const now=new Date(Date.now()+3*3600e3).toISOString();
 return JSON.stringify({updated:now.slice(8,10)+'.'+now.slice(5,7)+'.'+now.slice(0,4)+', '+now.slice(11,16),stamp:now.slice(0,16),shifts:out,sched});

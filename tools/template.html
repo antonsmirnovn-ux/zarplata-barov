@@ -164,10 +164,10 @@ th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
       <label>Месяц<input type="month" id="cMonth"></label>
       <div class="person" id="cCard"></div>
       <div class="panel log"><table>
-        <thead><tr><th>Дата</th><th>Кухня до скидок</th><th>7%</th></tr></thead>
+        <thead><tr><th>Дата</th><th>13шка</th><th>ЕпО</th><th>Кухня всего</th><th>7%</th></tr></thead>
         <tbody id="cRows"></tbody>
       </table></div>
-      <div class="note">Выручка кухни ЕпО до скидок, без бесплатного питания персонала. Оклад 45 000 ₽ в месяц, аванс 10 000 ₽ каждый понедельник, остаток и 7% — в начале следующего месяца. Видно только под паролем владельца.</div>
+      <div class="note">Выручка кухни обоих баров (13шка + ЕпО) из отчётов GainUp. Оклад 45 000 ₽ в месяц, аванс 10 000 ₽ каждый понедельник, остаток и 7% — в начале следующего месяца. Видно только под паролем владельца.</div>
     </div>
   </section>
 
@@ -299,11 +299,12 @@ function renderCook(){const m=$('cMonth').value;const c=cookCalc(m);const C=own.
   $('cCard').innerHTML=`<div class="ph"><span class="name">${esc(C.name)}</span><span class="total num">${rub(c.total)}</span></div>
    <div class="lines num">
    <div class="ln"><span>Оклад за месяц</span><span class="v"></span><b>${rub(c.base)}</b></div>
-   <div class="ln"><span>Кухня ${C.pct}%</span><span class="v">${rub(c.rev)}</span><b>${rub(c.pct)}</b></div>
+   <div class="ln"><span>Кухня обоих баров, ${C.pct}%</span><span class="v">${rub(c.rev)}</span><b>${rub(c.pct)}</b></div>
    ${c.mons.map(d=>`<div class="ln"><span>Аванс ${d.slice(8)}.${d.slice(5,7)}, пн</span><span class="v">${d<=t?'выплачен':'предстоит'}</span><b>−${rub(ADV)}</b></div>`).join('')}
    <div class="ln"><span><b style="color:var(--fg)">${done?'К доплате за месяц':'К доплате на сейчас'}</b></span><span class="v">${done?'':'месяц не закончен'}</span><b>${rub(c.rest)}</b></div></div>`;
-  $('cRows').innerHTML=c.days.length?c.days.sort((a,b)=>a.date.localeCompare(b.date)).map(x=>`<tr><td class="num">${x.date.slice(8)}.${x.date.slice(5,7)}</td><td class="num">${x.kit==null?'—':rub(x.kit)}</td><td class="num"><b>${x.kit==null?'—':rub(x.kit*C.pct/100)}</b></td></tr>`).join(''):'<tr><td colspan="3" class="empty">Нет смен</td></tr>';}
-$('goCook').onclick=()=>{$('cMonth').value=todayStr().slice(0,7);$('cSub').textContent='ЕпО · данные на '+unlocked[cur].updated;show('cook');renderCook();};
+  const byd={};c.days.forEach(x=>{const o=byd[x.date]=byd[x.date]||{'13':0,epo:0};o[x.bar]+=x.kit||0;});
+  $('cRows').innerHTML=Object.keys(byd).length?Object.keys(byd).sort().map(ds=>{const o=byd[ds],t=o['13']+o.epo;return `<tr><td class="num">${ds.slice(8)}.${ds.slice(5,7)}</td><td class="num">${rub(o['13'])}</td><td class="num">${rub(o.epo)}</td><td class="num">${rub(t)}</td><td class="num"><b>${rub(t*C.pct/100)}</b></td></tr>`}).join(''):'<tr><td colspan="5" class="empty">Нет смен</td></tr>';}
+$('goCook').onclick=()=>{$('cMonth').value=todayStr().slice(0,7);$('cSub').textContent='Данные на '+unlocked[cur].updated;show('cook');renderCook();};
 $('cMonth').onchange=renderCook;
 document.querySelectorAll('.back').forEach(b=>b.onclick=()=>open(cur));
 $('goPay').onclick=()=>{show('view');render();};

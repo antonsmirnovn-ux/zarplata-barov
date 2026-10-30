@@ -16,7 +16,7 @@ for(const bar of ['13','epo']){
     ct:b64(await subtle.encrypt({name:'AES-GCM',iv},ak,new TextEncoder().encode(JSON.stringify(payload))))}};}
 // только для владельца: ЗП повара ЕпО
 if(K.own){const COOK={name:'Саня Янтальцев',bar:'epo',base:45000,pct:7};
-  const payload={cook:COOK,days:D.shifts.filter(s=>s.bar===COOK.bar).map(s=>({date:s.date,kit:s.kit??null}))};
+  const payload={cook:COOK,days:D.shifts.map(s=>({date:s.date,bar:s.bar,kit:s.kit??null}))};
   const pub=await subtle.importKey('raw',Buffer.from(K.own.pub,'base64'),{name:'ECDH',namedCurve:'P-256'},false,[]);
   const eph=await subtle.generateKey({name:'ECDH',namedCurve:'P-256'},true,['deriveKey']);
   const ak=await subtle.deriveKey({name:'ECDH',public:pub},eph.privateKey,{name:'AES-GCM',length:256},false,['encrypt']);
