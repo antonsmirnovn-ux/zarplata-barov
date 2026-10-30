@@ -132,8 +132,8 @@ th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
       <div class="tiles">
         <button class="tile b13" id="goPay"><span class="t">Зарплата</span><span class="s" id="payHint"></span></button>
         <button class="tile b13" id="goSched"><span class="t">График</span><span class="s" id="schedHint"></span></button>
-        <button class="tile b13" id="goCook" hidden><span class="t">Саня</span><span class="s" id="cookHint"></span></button>
-        <button class="tile b13" id="goDiana" hidden><span class="t">Диана</span><span class="s" id="dianaHint"></span></button>
+        <button class="tile b13" id="goCook" hidden><span class="t" id="cookT"></span><span class="s" id="cookHint"></span></button>
+        <button class="tile b13" id="goDiana" hidden><span class="t" id="dianaT"></span><span class="s" id="dianaHint"></span></button>
       </div>
     </div>
   </section>
@@ -159,7 +159,7 @@ th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
   <section id="cook" hidden>
     <div style="display:flex;flex-direction:column;gap:16px">
       <div class="top">
-        <div><h1>Саня</h1><div class="sub" id="cSub"></div></div>
+        <div><h1 id="cTitle"></h1><div class="sub" id="cSub"></div></div>
         <button class="btn small ghost back">Назад</button>
       </div>
       <label>Месяц<input type="month" id="cMonth"></label>
@@ -168,19 +168,19 @@ th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
         <thead><tr><th>Дата</th><th>13шка</th><th>ЕпО</th><th>Кухня всего</th><th>7%</th></tr></thead>
         <tbody id="cRows"></tbody>
       </table></div>
-      <div class="note">Выручка кухни обоих баров (13шка + ЕпО) из отчётов GainUp. Оклад 45 000 ₽ в месяц, аванс 10 000 ₽ каждый понедельник, остаток и 7% — в начале следующего месяца. Видно только под паролем владельца.</div>
+      <div class="note" id="cNote"></div>
     </div>
   </section>
 
   <section id="diana" hidden>
     <div style="display:flex;flex-direction:column;gap:16px">
       <div class="top">
-        <div><h1>Диана</h1><div class="sub">Повар ЕпО</div></div>
+        <div><h1 id="dTitle"></h1><div class="sub">Повар ЕпО</div></div>
         <button class="btn small ghost back">Назад</button>
       </div>
       <label>Месяц<input type="month" id="dMonth"></label>
       <div class="person" id="dCard"></div>
-      <div class="note">3 200 ₽ за смену и 3 000 ₽ разово в конце месяца. Количество смен за месяц вносится вручную. Видно только под паролем владельца.</div>
+      <div class="note" id="dNote"></div>
     </div>
   </section>
 
@@ -304,9 +304,9 @@ function open(bar){cur=bar;lsSet('zp-bar',bar);const d=unlocked[bar];
   const ls=(d.sched||[]).filter(s=>s.sales>0||!s.close).sort((a,b)=>b.date.localeCompare(a.date))[0];
   $('schedHint').textContent=ls?'Последняя смена: '+ls.date.slice(8)+'.'+ls.date.slice(5,7)+' · '+ls.name:'';
   const showCook=!!(own&&own.cook.bar===bar);$('goCook').hidden=!showCook;
-  if(showCook){const c=cookCalc(todayStr().slice(0,7));$('cookHint').textContent='к доплате '+rub(c.rest);}
+  if(showCook){const c=cookCalc(todayStr().slice(0,7));$('cookT').textContent=own.cook.name.split(' ')[0];$('cTitle').textContent=own.cook.name.split(' ')[0];$('cNote').textContent='Выручка кухни обоих баров (13шка + ЕпО) из отчётов GainUp. Оклад '+rub(own.cook.base)+' в месяц, аванс 10 000 ₽ каждый понедельник, остаток и '+own.cook.pct+'% — в начале следующего месяца. Видно только под паролем владельца.';$('cookHint').textContent='к доплате '+rub(c.rest);}
   const D=own&&own.extra&&own.extra.diana;$('goDiana').hidden=!(showCook&&D);
-  if(showCook&&D){const r=dianaCalc(todayStr().slice(0,7));$('dianaHint').textContent=r.n?r.n+' смен · '+rub(r.total):'смены не внесены';}
+  if(showCook&&D){const r=dianaCalc(todayStr().slice(0,7));$('dianaT').textContent=D.name;$('dTitle').textContent=D.name;$('dNote').textContent=rub(D.perShift)+' за смену и '+rub(D.bonus)+' разово в конце месяца. Количество смен за месяц вносится вручную. Видно только под паролем владельца.';$('dianaHint').textContent=r.n?r.n+' смен · '+rub(r.total):'смены не внесены';}
   show('barhome');}
 const ADV=10000;
 function mondays(m){const[y,mm]=m.split('-').map(Number);const r=[];for(let d=1;d<=new Date(y,mm,0).getDate();d++){const dt=new Date(y,mm-1,d);if(dt.getDay()===1)r.push(m+'-'+String(d).padStart(2,'0'));}return r;}
