@@ -132,8 +132,6 @@ th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
       <div class="tiles">
         <button class="tile b13" id="goPay"><span class="t">Зарплата</span><span class="s" id="payHint"></span></button>
         <button class="tile b13" id="goSched"><span class="t">График</span><span class="s" id="schedHint"></span></button>
-        <button class="tile b13" id="goCook" hidden><span class="t" id="cookT"></span><span class="s" id="cookHint"></span></button>
-        <button class="tile b13" id="goDiana" hidden><span class="t" id="dianaT"></span><span class="s" id="dianaHint"></span></button>
       </div>
     </div>
   </section>
@@ -153,34 +151,6 @@ th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
       <div class="cal" id="cal"></div>
       <div class="people" id="schedSum"></div>
       <div class="note" id="schedNote"></div>
-    </div>
-  </section>
-
-  <section id="cook" hidden>
-    <div style="display:flex;flex-direction:column;gap:16px">
-      <div class="top">
-        <div><h1 id="cTitle"></h1><div class="sub" id="cSub"></div></div>
-        <button class="btn small ghost back">Назад</button>
-      </div>
-      <label>Месяц<input type="month" id="cMonth"></label>
-      <div class="person" id="cCard"></div>
-      <div class="panel log"><table>
-        <thead><tr><th>Дата</th><th>13шка</th><th>ЕпО</th><th>Кухня всего</th><th>7%</th></tr></thead>
-        <tbody id="cRows"></tbody>
-      </table></div>
-      <div class="note" id="cNote"></div>
-    </div>
-  </section>
-
-  <section id="diana" hidden>
-    <div style="display:flex;flex-direction:column;gap:16px">
-      <div class="top">
-        <div><h1 id="dTitle"></h1><div class="sub">Повар ЕпО</div></div>
-        <button class="btn small ghost back">Назад</button>
-      </div>
-      <label>Месяц<input type="month" id="dMonth"></label>
-      <div class="person" id="dCard"></div>
-      <div class="note" id="dNote"></div>
     </div>
   </section>
 
@@ -236,21 +206,9 @@ const lsGet=k=>{try{return JSON.parse(localStorage.getItem(k))}catch(e){return n
 const lsSet=(k,v)=>{try{v==null?localStorage.removeItem(k):localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
 let half=new Date().getDate()<=15?'1':'2';
 
-function show(id){['home','gate','barhome','view','sched','cook','diana'].forEach(x=>$(x).hidden=x!==id);window.scrollTo(0,0);}
+function show(id){['home','gate','barhome','view','sched'].forEach(x=>$(x).hidden=x!==id);window.scrollTo(0,0);}
 async function pwKey(pw,salt){const base=await crypto.subtle.importKey('raw',te.encode(pw.normalize('NFC').trim().toLowerCase().replace(/ё/g,'е')),'PBKDF2',false,['deriveKey']);
   return crypto.subtle.deriveKey({name:'PBKDF2',salt:b64(salt),iterations:VAULT.iter,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['decrypt']);}
-async function tryOwn(pw){if(!VAULT.own)return null;
-  for(const w of VAULT.own.wraps){try{
-    const k=await pwKey(pw,w.salt);const pk=await crypto.subtle.decrypt({name:'AES-GCM',iv:b64(w.iv)},k,b64(w.ct));
-    const priv=await crypto.subtle.importKey('pkcs8',pk,{name:'ECDH',namedCurve:'P-256'},false,['deriveKey']);
-    const d=VAULT.own.data;const ep=await crypto.subtle.importKey('raw',b64(d.epub),{name:'ECDH',namedCurve:'P-256'},false,[]);
-    const ak=await crypto.subtle.deriveKey({name:'ECDH',public:ep},priv,{name:'AES-GCM',length:256},false,['decrypt']);
-    const o=JSON.parse(td.decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:b64(d.iv)},ak,b64(d.ct))));
-    const x=VAULT.ownx;if(x){try{const ep2=await crypto.subtle.importKey('raw',b64(x.epub),{name:'ECDH',namedCurve:'P-256'},false,[]);
-      const k2=await crypto.subtle.deriveKey({name:'ECDH',public:ep2},priv,{name:'AES-GCM',length:256},false,['decrypt']);
-      o.extra=JSON.parse(td.decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:b64(x.iv)},k2,b64(x.ct))));}catch(e){}}
-    return o;}catch(e){}}return null;}
-let own=null;
 async function tryUnlock(bar,pw){
   for(const w of VAULT.bars[bar].wraps){try{
     const k=await pwKey(pw,w.salt);
@@ -279,12 +237,11 @@ $('gateForm').onsubmit=async e=>{e.preventDefault();const pw=$('pw').value;$('ga
   const data=await tryUnlock(gateBar,pw);
   if(data){unlocked[gateBar]=data;const other=gateBar==='13'?'epo':'13';
     const od=await tryUnlock(other,pw);if(od){unlocked[other]=od;canAll=true;}
-    own=await tryOwn(pw);
     const saved=lsGet(LS)||{};saved[gateBar]=pw;if(canAll)saved[other]=pw;lsSet(LS,saved);
     $('pw').value='';open(gateBar);}
   else $('gateErr').hidden=false;
   $('gateBtn').disabled=false;$('gateBtn').textContent='Войти';};
-$('logout').onclick=()=>{own=null;for(const k in unlocked)delete unlocked[k];canAll=false;cur=null;lsSet(LS,null);lsSet('zp-who',null);show('home');};
+$('logout').onclick=()=>{for(const k in unlocked)delete unlocked[k];canAll=false;cur=null;lsSet(LS,null);lsSet('zp-who',null);show('home');};
 $('switchBar').onclick=()=>open(cur==='13'?'epo':'13');
 
 function open(bar){cur=bar;lsSet('zp-bar',bar);const d=unlocked[bar];
@@ -303,36 +260,8 @@ function open(bar){cur=bar;lsSet('zp-bar',bar);const d=unlocked[bar];
   $('payHint').textContent=(who[cur]?who[cur]+' · ':'')+periodLabel()+' · '+rub(tot);
   const ls=(d.sched||[]).filter(s=>s.sales>0||!s.close).sort((a,b)=>b.date.localeCompare(a.date))[0];
   $('schedHint').textContent=ls?'Последняя смена: '+ls.date.slice(8)+'.'+ls.date.slice(5,7)+' · '+ls.name:'';
-  const showCook=!!(own&&own.cook.bar===bar);$('goCook').hidden=!showCook;
-  if(showCook){const c=cookCalc(todayStr().slice(0,7));$('cookT').textContent=own.cook.name.split(' ')[0];$('cTitle').textContent=own.cook.name.split(' ')[0];$('cNote').textContent='Выручка кухни обоих баров (13шка + ЕпО) из отчётов GainUp. Оклад '+rub(own.cook.base)+' в месяц, аванс 10 000 ₽ каждый понедельник, остаток и '+own.cook.pct+'% — в начале следующего месяца. Видно только под паролем владельца.';$('cookHint').textContent='к доплате '+rub(c.rest);}
-  const D=own&&own.extra&&own.extra.diana;$('goDiana').hidden=!(showCook&&D);
-  if(showCook&&D){const r=dianaCalc(todayStr().slice(0,7));$('dianaT').textContent=D.name;$('dTitle').textContent=D.name;$('dNote').textContent=rub(D.perShift)+' за смену и '+rub(D.bonus)+' разово в конце месяца. Количество смен за месяц вносится вручную. Видно только под паролем владельца.';$('dianaHint').textContent=r.n?r.n+' смен · '+rub(r.total):'смены не внесены';}
   show('barhome');}
-const ADV=10000;
-function mondays(m){const[y,mm]=m.split('-').map(Number);const r=[];for(let d=1;d<=new Date(y,mm,0).getDate();d++){const dt=new Date(y,mm-1,d);if(dt.getDay()===1)r.push(m+'-'+String(d).padStart(2,'0'));}return r;}
-function cookCalc(m){const C=own.cook;const days=own.days.filter(x=>x.date.startsWith(m));
-  const rev=days.reduce((a,x)=>a+(x.kit||0),0);const pct=rev*C.pct/100;const mons=mondays(m);const adv=mons.length*ADV;
-  return {days,rev,pct,base:C.base,total:C.base+pct,mons,adv,rest:C.base+pct-adv};}
-function renderCook(){const m=$('cMonth').value;const c=cookCalc(m);const C=own.cook;const t=todayStr();
-  const[y,mm]=m.split('-');const L=new Date(+y,+mm,0).getDate();const done=t>m+'-'+String(L).padStart(2,'0');
-  $('cCard').innerHTML=`<div class="ph"><span class="name">${esc(C.name)}</span><span class="total num">${rub(c.total)}</span></div>
-   <div class="lines num">
-   <div class="ln"><span>Оклад за месяц</span><span class="v"></span><b>${rub(c.base)}</b></div>
-   <div class="ln"><span>Кухня обоих баров, ${C.pct}%</span><span class="v">${rub(c.rev)}</span><b>${rub(c.pct)}</b></div>
-   ${c.mons.map(d=>`<div class="ln"><span>Аванс ${d.slice(8)}.${d.slice(5,7)}, пн</span><span class="v">${d<=t?'выплачен':'предстоит'}</span><b>−${rub(ADV)}</b></div>`).join('')}
-   <div class="ln"><span><b style="color:var(--fg)">${done?'К доплате за месяц':'К доплате на сейчас'}</b></span><span class="v">${done?'':'месяц не закончен'}</span><b>${rub(c.rest)}</b></div></div>`;
-  const byd={};c.days.forEach(x=>{const o=byd[x.date]=byd[x.date]||{'13':0,epo:0};o[x.bar]+=x.kit||0;});
-  $('cRows').innerHTML=Object.keys(byd).length?Object.keys(byd).sort().map(ds=>{const o=byd[ds],t=o['13']+o.epo;return `<tr><td class="num">${ds.slice(8)}.${ds.slice(5,7)}</td><td class="num">${rub(o['13'])}</td><td class="num">${rub(o.epo)}</td><td class="num">${rub(t)}</td><td class="num"><b>${rub(t*C.pct/100)}</b></td></tr>`}).join(''):'<tr><td colspan="5" class="empty">Нет смен</td></tr>';}
-$('goCook').onclick=()=>{$('cMonth').value=todayStr().slice(0,7);$('cSub').textContent='Данные на '+unlocked[cur].updated;show('cook');renderCook();};
-$('cMonth').onchange=renderCook;
-function dianaCalc(m){const D=own.extra.diana;const n=(D.shifts||{})[m]||0;return {n,pay:n*D.perShift,bonus:n?D.bonus:0,total:n*D.perShift+(n?D.bonus:0)};}
-function renderDiana(){const m=$('dMonth').value;const D=own.extra.diana;const r=dianaCalc(m);
-  $('dCard').innerHTML=`<div class="ph"><span class="name">${esc(D.name)}</span><span class="total num">${rub(r.total)}</span></div>
-   <div class="lines num"><div class="ln"><span>Смены</span><span class="v">${r.n} × ${rub(D.perShift)}</span><b>${rub(r.pay)}</b></div>
-   <div class="ln"><span>Разово в конце месяца</span><span class="v"></span><b>${rub(r.bonus)}</b></div></div>
-   ${r.n?'':'<div class="empty">Смены за этот месяц ещё не внесены</div>'}`;}
-$('goDiana').onclick=()=>{$('dMonth').value=todayStr().slice(0,7);show('diana');renderDiana();};
-$('dMonth').onchange=renderDiana;
+
 document.querySelectorAll('.back').forEach(b=>b.onclick=()=>open(cur));
 $('goPay').onclick=()=>{show('view');render();};
 $('goSched').onclick=()=>{sm=todayStr().slice(0,7);show('sched');renderSched();loadPlan();};
@@ -414,7 +343,6 @@ function toast(t){const d=document.createElement('div');d.className='toast';d.te
 $('updNote').textContent=VAULT?'Данные GainUp на '+VAULT.updated:'';
 (async()=>{const saved=lsGet(LS);if(!saved||!VAULT)return;let first=null;
   for(const b of ['13','epo']){if(!saved[b])continue;const d=await tryUnlock(b,saved[b]);if(d){unlocked[b]=d;first=first||b;}else{delete saved[b];}}
-  if(saved['13']&&saved['13']===saved['epo'])own=await tryOwn(saved['13']);
   lsSet(LS,Object.keys(saved).length?saved:null);
   canAll=!!(unlocked['13']&&unlocked['epo']);
   const last=lsGet('zp-bar');if(last&&unlocked[last])open(last);else if(first&&!canAll)open(first);})();
