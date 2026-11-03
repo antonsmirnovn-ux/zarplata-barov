@@ -284,7 +284,7 @@ function openDay(ds){const d=unlocked[cur];if(!d.cfg||ds<todayStr())return;dmDat
   const names=barNames();const plan=(planCache[cur]||[]).filter(s=>s.date===ds).map(s=>s.name);
   const [y,m,dd]=ds.split('-');const wd=['воскресенье','понедельник','вторник','среда','четверг','пятница','суббота'][new Date(+y,m-1,+dd).getDay()];
   $('dmTitle').textContent=+dd+' '+MONG[m-1]+', '+wd;
-  const f=(d.sched||[]).filter(s=>s.date===ds&&(s.sales>0||!s.close));$('dmFact').textContent=f.length?'По факту на смене: '+f.map(s=>s.name).join(', '):'Отметьте, кто выходит в этот день';
+  const f=(d.sched||[]).filter(s=>s.date===ds&&(s.sales>0||(!s.close&&s.date===todayStr())));$('dmFact').textContent=f.length?'По факту на смене: '+f.map(s=>s.name).join(', '):'Отметьте, кто выходит в этот день';
   $('dmPicks').innerHTML=names.map(n=>`<button class="pick ${plan.includes(n)?'on':''} ${colOf(n,names)}" data-n="${esc(n)}"><span class="box"></span>${esc(n)}</button>`).join('');
   $('dmErr').hidden=true;$('dayModal').hidden=false;}
 $('dmClose').onclick=()=>{$('dayModal').hidden=true;renderSched();};
@@ -297,7 +297,7 @@ const MONG=['января','февраля','марта','апреля','мая'
 function barNames(){const d=unlocked[cur];return [...new Set([...(d.sched||[]),...(planCache[cur]||[])].map(s=>s.name))].sort((a,b)=>a.localeCompare(b,'ru'));}
 function colOf(n,names){return 'c'+(names.indexOf(n)%2);}
 $('cal').onclick=e=>{const c=e.target.closest('.day[data-d]');if(c)openDay(c.dataset.d);};
-function renderSched(){const d=unlocked[cur];const list=(d.sched||[]).filter(s=>s.date.startsWith(sm)&&(s.sales>0||!s.close));
+function renderSched(){const d=unlocked[cur];const list=(d.sched||[]).filter(s=>s.date.startsWith(sm)&&(s.sales>0||(!s.close&&s.date===todayStr())));
   if(!planCache[cur])planCache[cur]=lsGet('zp-plan-'+cur)||[];
   const plan=planCache[cur].filter(s=>s.date.startsWith(sm));
   const names=barNames();
