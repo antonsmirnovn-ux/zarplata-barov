@@ -258,7 +258,7 @@ function open(bar){cur=bar;lsSet('zp-bar',bar);const d=unlocked[bar];
   render();
   const tot=visible().reduce((a,s)=>a+pay(s).total,0);
   $('payHint').textContent=(who[cur]?who[cur]+' · ':'')+periodLabel()+' · '+rub(tot);
-  const ls=(d.sched||[]).filter(s=>s.sales>0||!s.close).sort((a,b)=>b.date.localeCompare(a.date))[0];
+  const ls=(d.sched||[]).filter(s=>s.sales>0||(!s.close&&s.date===todayStr())).sort((a,b)=>b.date.localeCompare(a.date))[0];
   $('schedHint').textContent=ls?'Последняя смена: '+ls.date.slice(8)+'.'+ls.date.slice(5,7)+' · '+ls.name:'';
   show('barhome');}
 
