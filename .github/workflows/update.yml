@@ -1,0 +1,31 @@
+name: Обновление зарплаты из GainUp
+on:
+  schedule:
+    - cron: '7 8 * * *'   # 11:07 по Москве
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency: { group: update, cancel-in-progress: false }
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm i --no-save cheerio@1.0.0
+      - name: Забрать смены из GainUp
+        env:
+          GAINUP_LOGIN: ${{ secrets.GAINUP_LOGIN }}
+          GAINUP_PASSWORD: ${{ secrets.GAINUP_PASSWORD }}
+        run: node tools/fetch-node.mjs "$RUNNER_TEMP/data.json"
+      - name: Собрать и опубликовать
+        run: |
+          node tools/build.mjs "$RUNNER_TEMP/data.json"
+          git config user.name "antonsmirnovn-ux"
+          git config user.email "antonsmirnovn-ux@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet && { echo "без изменений"; exit 0; }
+          git commit -m "Автообновление данных $(date -u -d '+3 hours' '+%d.%m.%Y %H:%M')"
+          git push
