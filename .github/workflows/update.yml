@@ -1,9 +1,12 @@
 name: Обновление зарплаты из GainUp
 on:
   schedule:
-    - cron: '7 8 * * *'    # 11:07 по Москве
-    - cron: '37 9 * * *'   # 12:37 — запасной, если GitHub пропустил утренний запуск
-    - cron: '37 12 * * *'  # 15:37 — ещё один запасной
+    # GitHub запускает по расписанию с опозданием до часа и больше, поэтому стартуем заранее,
+    # с запасными попытками; лишние запуски ничего не делают, если сегодня уже обновлено.
+    - cron: '7 5 * * *'    # 08:07 по Москве
+    - cron: '7 6 * * *'    # 09:07
+    - cron: '7 7 * * *'    # 10:07
+    - cron: '37 9 * * *'   # 12:37
   workflow_dispatch:
 permissions:
   contents: write
@@ -19,7 +22,7 @@ jobs:
         run: |
           today=$(date -u -d '+3 hours' +%Y-%m-%d)
           stamp=$(grep -o '"stamp":"[^"]*"' index.html | cut -d'"' -f4)
-          if [ "${{ github.event_name }}" = "schedule" ] && [[ "$stamp" > "${today}T11:00" ]]; then echo "skip=1" >> $GITHUB_OUTPUT; echo "сегодня уже обновлено ($stamp)"; fi
+          if [ "${{ github.event_name }}" = "schedule" ] && [[ "$stamp" > "${today}T08:00" ]]; then echo "skip=1" >> $GITHUB_OUTPUT; echo "сегодня уже обновлено ($stamp)"; fi
       - uses: actions/setup-node@v4
         if: steps.chk.outputs.skip != '1'
         with: { node-version: 22 }
